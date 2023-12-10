@@ -1,0 +1,8 @@
+
+usage: generate_data.py [-h] [--generator {normal,uniform,correlated,anticorrelated}]
+                        [--mean MEAN] [--std_dev STD_DEV] [--min_val MIN_VAL]
+                        [--max_val MAX_VAL] [--rho RHO] [--num_points NUM_POINTS]
+                        [--output_file OUTPUT_FILE] [--seed SEED]
+                        [--num_dimensions NUM_DIMENSIONS]
+
+python generate_data.py --generator correlated --mean 200 --num_points 1500 --std_dev 2.5 --output_file generated_data.csv --seed 42 --num_dimensions 5
