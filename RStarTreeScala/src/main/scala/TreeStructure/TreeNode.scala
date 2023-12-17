@@ -8,7 +8,7 @@ import scala.collection.mutable.ListBuffer
 abstract class TreeNode extends Iterable[GeometricObject] {
 
   private var nodeID: Int = _
-  private var entriesOnNode: ListBuffer[GeometricObject] = ListBuffer() // empty mutable list
+  private var entriesOnNode: ListBuffer[GeometricObject] = new ListBuffer[GeometricObject] // empty mutable list
 
   private var NBitsInNode: Int = 0
 
