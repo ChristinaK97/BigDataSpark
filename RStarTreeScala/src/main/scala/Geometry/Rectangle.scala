@@ -1,10 +1,11 @@
 package Geometry
 
+import Util.Constants.{ONE_MM, sizeOfDouble, sizeOfInt}
+
 class Rectangle extends GeometricObject {
 
   private var pm: Point = _     //bottom left corner point
   private var pM: Point = _     //upper right corner point
-  private val ONE_MM: Double = 0.001
 
   /** Δημιουγεί rectangle με το pm ως  bottom left corner
    * και το pM ως  upper right corner
@@ -25,6 +26,10 @@ class Rectangle extends GeometricObject {
     this(new Point(N), new Point(N))
   }
 
+  /** @return Επιστρέφει ένα αντίγραφο του αντικειμένου */
+  def makeCopy: Rectangle =
+    new Rectangle(this.pm.makeCopy, this.pM.makeCopy)
+
 
   def get_pm: Point = pm
   def get_pM: Point = pM
@@ -33,6 +38,9 @@ class Rectangle extends GeometricObject {
   /** The number of dimensions */
   def N: Int =
     pm.N
+
+  /** 2 * N dims * sizeof(double) + sizeof(int) */
+  override def getMemorySize: Int = 2 * N * sizeOfDouble + sizeOfInt
 
 
 /*---------------------- Rectangle Properties --------------------------------*/
@@ -282,7 +290,7 @@ class Rectangle extends GeometricObject {
     if (!this.overlaps(R))
       return null
 
-    val overlapRect = new Rectangle
+    val overlapRect = new Rectangle(N)
     for (i <- 0 until N) {
       overlapRect.pm.setCoordinate(i, Math.max(pm.getCoordinate(i), R.pm.getCoordinate(i)))
       overlapRect.pM.setCoordinate(i, Math.min(pM.getCoordinate(i), R.pM.getCoordinate(i)))

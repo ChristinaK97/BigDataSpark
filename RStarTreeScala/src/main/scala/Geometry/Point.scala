@@ -1,5 +1,7 @@
 package Geometry
 
+import Util.Constants.sizeOfDouble
+
 class Point extends GeometricObject {
 
   private var coordinates: Array[Double] = _ // Declaring coordinates as a mutable empty array
@@ -16,9 +18,17 @@ class Point extends GeometricObject {
     this.coordinates = coordinates
   }
 
+  /** @return Επιστρέφει ένα αντίγραφο του αντικειμένου */
+  def makeCopy: Point =
+    new Point(coordinates.clone())
+
+
   /** The number of dimensions */
   def N: Int =
     coordinates.length
+
+  /** N dims * sizeof(double) */
+  override def getMemorySize: Int = N * sizeOfDouble
 
   def getCoordinates: Array[Double] =
     coordinates
