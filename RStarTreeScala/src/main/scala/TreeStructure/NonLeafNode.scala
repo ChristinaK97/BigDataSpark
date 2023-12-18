@@ -3,9 +3,8 @@ package TreeStructure
 import Geometry.{GeometricObject, Rectangle}
 
 import scala.collection.mutable
-import scala.collection.mutable.HashMap
 
-class NonLeafNode extends TreeNode {
+class NonLeafNode(nodeId: Int) extends TreeNode(nodeId) {
 
   override def isLeaf: Boolean = false
 
@@ -16,19 +15,19 @@ class NonLeafNode extends TreeNode {
 
 /* ---------------------Για την chooseSubtree-----------------------------------------------*/
 
-  private var chosenRectangles: HashMap[Int, Rectangle] = _
+  private var chosenRectangles: mutable.HashMap[Int, Rectangle] = _
 
 
   def chosenEntry(O: GeometricObject, childPointersToLeaf: Boolean): Int = {
-    chosenRectangles = new HashMap[Int, Rectangle]()
+    chosenRectangles = new mutable.HashMap[Int, Rectangle]()
     /* Για κάθε ορθογώνιο στο Node (entriesOnNode):
 	   *     Δημιουργεί αντίγραφο
 		 *     Επέκτεινει το αντίγραφο για να συμπεριλάβει το Point P
 		 *     Τοποθετεί το αντίγραφο στο chosenRectangles ως υποψήφιο
 	   */
-    this.zipWithIndex.foreach{case (rectangle: Rectangle, i) => {
+    this.zipWithIndex.foreach{case (rectangle: Rectangle, i) =>
       chosenRectangles += (i -> rectangle.makeCopy.expandRectangle(O))
-    }}
+    }
     var chosenEntry: Int = -1
 
     //Αν οι childPointers του Node δείχνουν σε φύλλα επιλογή
@@ -95,7 +94,7 @@ class NonLeafNode extends TreeNode {
   private def minAreaEnlargement: Int = {
     val evaluation = mutable.HashMap[Int, Double]()
     //για κάθε υποψήφιο ορθογώνιο i
-    chosenRectangles.foreach { case (i, expandedR_i) => {
+    chosenRectangles.foreach { case (i, expandedR_i) =>
       /* Αύξηση του εμβαδού του i =
 			 *   εμβαδόν του i μετά την επέκταση
 			 * - εμβαδόν του i πριν την επέκταση
@@ -103,7 +102,7 @@ class NonLeafNode extends TreeNode {
       evaluation += (i ->
         (expandedR_i.getArea - getRectangle(i).getArea)
       )
-    }}
+    }
     choose(evaluation)
   }
 
@@ -132,7 +131,7 @@ class NonLeafNode extends TreeNode {
    *         ορθογώνιο, τη θέση του στο entriesOnNode
    *         Αλλιώς αν παραπάνω από ένα υποψήφια, επιστρέφει null.
    */
-  private def choose(evaluation: HashMap[Int,Double]): Int = {
+  private def choose(evaluation: mutable.HashMap[Int,Double]): Int = {
     val minValue: Double = evaluation.values.min
 
     /* για κάθε υποψήφιο ορθογώνιο

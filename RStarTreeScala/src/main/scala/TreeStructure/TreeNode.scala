@@ -5,24 +5,28 @@ import Util.Constants.UP_LIMIT
 
 import scala.collection.mutable.ListBuffer
 
-abstract class TreeNode extends Iterable[GeometricObject] {
+abstract class TreeNode(nodeId: Int) extends Iterable[GeometricObject] {
 
-  private var nodeID: Int = _
-  private var entriesOnNode: ListBuffer[GeometricObject] = new ListBuffer[GeometricObject] // empty mutable list
-
+  private val nodeID: Int = nodeId
   private var NBitsInNode: Int = 0
+  private var entriesOnNode: ListBuffer[GeometricObject] = ListBuffer[GeometricObject]() // empty mutable list
 
-  def this(nodeID: Int) {
-    this()
-    this.nodeID = nodeID
-  }
 
   /** Iterator for entriesOnNode */
-  override def iterator: Iterator[GeometricObject] = entriesOnNode.iterator
+  override def iterator: Iterator[GeometricObject] =
+    entriesOnNode.iterator
 
-  def getNodeID: Int = nodeID
+  def getNodeID: Int =
+    nodeID
 
-  def getNumberOfEntries: Int = entriesOnNode.length
+  def getNumberOfEntries: Int =
+    entriesOnNode.length
+
+  def getEntries: ListBuffer[GeometricObject] =
+    entriesOnNode
+
+  def getEntry(index: Int): GeometricObject =
+    entriesOnNode(index)
 
   def setEntries(entries: ListBuffer[GeometricObject]): Unit =
     this.entriesOnNode = entries
@@ -31,9 +35,6 @@ abstract class TreeNode extends Iterable[GeometricObject] {
     entriesOnNode += node
     NBitsInNode += node.getMemorySize
   }
-
-  def getEntry(index: Int): GeometricObject =
-    entriesOnNode(index)
 
   def deleteEntry(splitIndex: Int): Unit =
     entriesOnNode.remove(splitIndex)
@@ -45,6 +46,8 @@ abstract class TreeNode extends Iterable[GeometricObject] {
     NBitsInNode >= UP_LIMIT
 
   def isLeaf: Boolean
+
+  //def sortEntriesBy[T <: GeometricObject](axis:Int): ListBuffer[T]
 
 
 }

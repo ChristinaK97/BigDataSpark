@@ -7,6 +7,8 @@ class Rectangle extends GeometricObject {
   private var pm: Point = _     //bottom left corner point
   private var pM: Point = _     //upper right corner point
 
+  //TODO: add fields childptr, count
+
   /** Δημιουγεί rectangle με το pm ως  bottom left corner
    * και το pM ως  upper right corner
    *
@@ -24,6 +26,13 @@ class Rectangle extends GeometricObject {
   /** Takes an Int 'N' to create new Points */
   def this(N: Int) {
     this(new Point(N), new Point(N))
+  }
+
+  def this(P: Point) {
+    this()
+    this.pm = new Point(P.getCoordinates)
+    this.pM = new Point(P.getCoordinates)
+    expandRectangle(P)
   }
 
   /** @return Επιστρέφει ένα αντίγραφο του αντικειμένου */
