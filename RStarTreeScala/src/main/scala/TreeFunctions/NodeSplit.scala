@@ -34,13 +34,13 @@ class NodeSplit(nextId: Int) {
    *         - MBR1 : To Rectangle που περικλύει τα σημεία του πρώτου φύλλου. Θα πρέπει να
    *            ενταχτεί σε ένα NonLeafNode στο προτελευταίο επίπεδο του δέντρου και ο childptr
    *            του να δείχνει στο 1ο φύλλο (=nodeID).
-   *         - leafNode1 : Ο 1ος κόμβος φύλλο που περιέχει το 50% των σημείων, έχει nodeID και
-   *            είναι παιδί του MBR1.
+   *         - leafNode1 : Ο 1ος κόμβος φύλλο που περιέχει το 50% των σημείων [0, splitIndex),
+   *           έχει nodeID και είναι παιδί του MBR1.
    *         - MBR2 : To Rectangle που περικλύει τα σημεία του δεύτερου φύλλου. Θα πρέπει να
    *            ενταχτεί σε ένα NonLeafNode στο προτελευταίο επίπεδο του δέντρου και ο childptr
    *            του να δείχνει στο 2ο φύλλο (=nextID).
-   *         - leafNode1 : Ο 1ος κόμβος φύλλο που περιέχει το υπόλοιπο 50% των σημείων, έχει nextID
-   *            και είναι παιδί του MBR2.
+   *         - leafNode1 : Ο 1ος κόμβος φύλλο που περιέχει το υπόλοιπο 50% των σημείων [splitIndex, last],
+   *           έχει nextID και είναι παιδί του MBR2.
    */
   private def splitNode(node: LeafNode): (Rectangle, LeafNode, Rectangle, LeafNode) = {
     /* Πίνακας λιστών με τις εγγραφές του κόμβου ταξινομημένες με
@@ -58,13 +58,13 @@ class NodeSplit(nextId: Int) {
     sorts.foreach{ axisSort => {
 
      //Πρώτο group από εγγραφές
-      //Δημιούργησε το R1 που θα περιέχει αυτά τα σημεία
+      //Δημιούργησε το R1 που θα περιέχει αυτά τα σημεία [0, splitIndex)
       val R1 = new Rectangle(axisSort.head)
       for(entry <- 1 until splitIndex)
         R1.expandRectangle(axisSort(entry))
 
      //Δεύτερο group από εγγραφές
-      //Δημιούργησε το R2 που θα περιέχει αυτά τα σημεία
+      //Δημιούργησε το R2 που θα περιέχει αυτά τα σημεία [splitIndex, last]
       val R2 = new Rectangle(axisSort(splitIndex + 1))
       for (entry <- splitIndex + 2 until axisSort.length)
         R2.expandRectangle(axisSort(entry))
@@ -100,9 +100,9 @@ class NodeSplit(nextId: Int) {
    /* ******** */
     (
       MBRs(2*chosenAxis),
-      new LeafNode(node.getNodeID, sorts(chosenAxis).take(splitIndex+1)),
+      new LeafNode(node.getNodeID, sorts(chosenAxis).take(splitIndex)),
       MBRs(2*chosenAxis+1),
-      new LeafNode(nextID, sorts(chosenAxis).drop(splitIndex+1))
+      new LeafNode(nextID, sorts(chosenAxis).drop(splitIndex))
     )
   }
 
