@@ -1,0 +1,115 @@
+Install spark on windows
+-------------------------
+
+1. Install spark and hadoop
+
+	- Download spark
+		https://spark.apache.org/downloads.html
+		1. Choose a Spark release: 3.5.0 (13 Sep 2023)
+		2. Choose a package type: Prebuild for Apache Hadoop 3.3 and later
+		3. Download Spark: spark-3.5.0-bin-hadoop3.tgz
+	
+		Extract tgz file at: C:\spark-3.5.0-bin-hadoop3
+		Add user env variable SPARK_HOME = C:\spark-3.5.0-bin-hadoop3
+		Add C:\spark-3.5.0-bin-hadoop3 to PATH variable
+	
+	- Download hadoop
+		https://github.com/cdarlint/winutils/tree/master/hadoop-3.3.5/bin
+		
+		The selected version should match with package type hadoop version
+		
+		winutils file at: C:\hadoop\bin\winutils.exe
+		
+		Add user env variable HADOOP_HOME = C:\hadoop
+		Add C:\hadoop to PATH variable
+	
+	- Test spark console
+		Open cmd at C:\spark-3.5.0-bin-hadoop3\bin
+		Call "spark-shell"
+		Try to read a file:
+			scala> val x =sc.textFile("beeline")
+			scala> x.take(11).foreach(println)
+		
+		Navigate to localhost:4040 for spark ui
+		
+		Exit spark: CTRL + D or scala> :quit
+		
+Tutorials:
+	https://www.youtube.com/watch?v=PbIzjViybM0&ab_channel=Simplilearn
+	https://dzone.com/articles/working-on-apache-spark-on-windows
+	https://phoenixnap.com/kb/install-spark-on-windows-10
+	
+
+2. Setup Scala in Intellij 
+	
+	- Add Scala language plugin to Intellij
+	- Create a Scala project using sbt builing tool
+	- Project config:
+		Language: Scala
+		JDK: 1.8 Oracle OpenJDK version 1.8.0_341
+		sbt: 1.9.7 (uncheck Download sources)
+		Scala: 2.13.12 (check Download sources)
+		Check add sample code to add a hello-world main
+		
+		Project Structure
+			ProjectName
+			|-- .bsp
+			|-- .idea
+			|-- project
+				|-- target
+				|-- build.properties
+			|-- src
+				|-- main
+					|-- scala
+						|-- Main.scala
+				|-- test
+			|-- target
+			|-- .gitgnore
+			|-- build.sbt
+			
+		build.sbt is where you add dependencies (like pom file in mvn)
+			https://mvnrepository.com/artifact/org.apache.spark/spark-core
+		
+			```
+			ThisBuild / version := "0.1.0-SNAPSHOT"
+
+			ThisBuild / scalaVersion := "2.12.18"
+
+			lazy val root = (project in file("."))
+				.settings(
+				name := "BigDataSpark"
+			)
+
+			libraryDependencies += "org.apache.spark" %% "spark-core" % "3.5.0"
+			```
+
+Tutorials:
+	https://www.youtube.com/watch?v=ACp2ioiTwQk&ab_channel=AzarudeenShahul
+	
+
+3. Package scala application in a jar
+
+	- Install sbt
+		https://www.scala-sbt.org/download.html
+		
+		System variable SBT_HOME = C:\Program Files (x86)\sbt\
+		and Path += C:\Program Files (x86)\sbt\bin
+		are automatically added during installation
+		
+		Sbt documentation:
+			https://www.scala-sbt.org/1.x/docs/Combined+Pages.html#Installing+sbt+on+Windows
+	
+	- Start cmd on the root dir of the project run:
+		sbt package
+	  The resulting jar can be found at ProjectName\target\scala${scala_version}\ProjectName_${scala_version}-0.1.0-SNAPSHOT.jar
+		
+	- Run jar in spark
+		Start cmd at C:\spark-3.5.0-bin-hadoop3\bin and run:
+			spark-submit path-to-jar\ProjectName_${scala_version}-0.1.0-SNAPSHOT.jar
+			
+			
+
+
+-----------
+Other tutorials:
+	https://kaizen.itversity.com/setup-development-environment-intellij-and-scala-big-data-hadoop-and-spark/
