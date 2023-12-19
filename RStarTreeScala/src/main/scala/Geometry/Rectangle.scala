@@ -113,11 +113,10 @@ class Rectangle extends GeometricObject {
    * @return true αν έγινε επέκταση του rectangle.
    *         false αν δεν έγινε επέκταση, δηλαδή όταν το P περιέχεται ήδη στο rectangle.
    */
-  def expandRectangle(O: GeometricObject): Boolean = {
+  def expandRectangle(O: GeometricObject): Rectangle = {
     O match {
-      case point: Point => expandRectangle(point)
+      case point:     Point     => expandRectangle(point)
       case rectangle: Rectangle => expandRectangle(rectangle)
-      case _ => false // Handle other cases or return a default value
     }
   }
 
@@ -168,19 +167,16 @@ class Rectangle extends GeometricObject {
    *                       P8
    * --------------------------------------------------------
    */
-  def expandRectangle(P: Point): Boolean = {
-    var expanded = false
+  def expandRectangle(P: Point): Rectangle = {
     for (i <- 0 until N) {
-      if (P.getCoordinate(i) >= pM.getCoordinate(i)) {
+
+      if (P.getCoordinate(i) >= pM.getCoordinate(i))
         pM.setCoordinate(i, P.getCoordinate(i) + ONE_MM)
-        expanded = true
-      }
-      if (P.getCoordinate(i) <= pm.getCoordinate(i)) {
+
+      if (P.getCoordinate(i) <= pm.getCoordinate(i))
         pm.setCoordinate(i, P.getCoordinate(i) - ONE_MM)
-        expanded = true
-      }
     }
-    expanded
+    this
   }
 
   /**
@@ -192,8 +188,10 @@ class Rectangle extends GeometricObject {
    * @return true αν έγινε επέκταση του rectangle.
    *         false αν δεν έγινε επέκταση, δηλαδή όταν το R περιέχεται ήδη στο rectangle.
    */
-  def expandRectangle(R: Rectangle): Boolean =
-    expandRectangle(R.pm) || expandRectangle(R.pM)
+  def expandRectangle(R: Rectangle): Rectangle = {
+    expandRectangle(R.pm)
+    expandRectangle(R.pM)
+  }
 
 
 /* ----------------------Σχετικές θέσεις Rectangle και Point ----------------------------*/
