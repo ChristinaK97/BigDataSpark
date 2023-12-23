@@ -1,10 +1,16 @@
 package TreeStructure
 
-import Geometry.{GeometricObject, Rectangle}
+import Geometry.{GeometricObject, Point, Rectangle}
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 class NonLeafNode(nodeId: Int) extends TreeNode(nodeId) {
+
+  def this(nodeId: Int, entries: ListBuffer[Rectangle]) = {
+    this(nodeId)
+    setEntries(entries.to(ListBuffer))
+  }
 
   override def isLeaf: Boolean = false
 
@@ -148,5 +154,26 @@ class NonLeafNode(nodeId: Int) extends TreeNode(nodeId) {
     // αν υπάρχουν παραπάνω από ένα υποψήφια
     else -1
   }
+
+/* ---------------------- Ταξινόμηση των εγγραφών του κόμβου-------------------------------*/
+  /** Επιστρέφει μια λίστα με ταξινομιμένες (αύξουσα) τις εγγραφές
+   * του κόμβου σύμφωνα με τον άξονα axis και το σημείο point.
+   * Ο κόμβος δεν είναι φύλλο άρα οι εγγραφές του είναι Rectangles.
+   * Θα ταξινομηθούν με βάσει την τιμή του σημείου point
+   * στην διάσταση axis: rectangle.point[axis]
+   *
+   * @param axis  : Ο άξονας βάσει του οποίου θα γίνει η ταξινόμηση.
+   * @param point : Το σημείο των ορθογωνίων βάσει του οποίου θα γίνει
+   *              η ταξινόμηση. Μπορεί να είναι είτε η κάτω αριστερή γωνία "pm"
+   *              είτε η πάνω δεξιά γωνία "pM"
+   */
+  def sortEntriesBy(axis: Int, point: String): ListBuffer[Rectangle] = {
+    getEntries.asInstanceOf[ListBuffer[Rectangle]].sortBy { rectangle =>
+      val selectedPoint: Point = if (point == "pm") rectangle.get_pm
+                                               else rectangle.get_pM
+      selectedPoint.getCoordinate(axis)
+    }
+  }
+
 
 }
