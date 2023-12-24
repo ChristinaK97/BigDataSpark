@@ -1,13 +1,14 @@
 package TreeStructure
 
-import Geometry.Point
+import Geometry.{GeometricObject, Point}
+
 import scala.collection.mutable.ListBuffer
 
-class LeafNode(nodeId: Int) extends TreeNode(nodeId) {
+class LeafNode(nodeId: Int) extends TreeNode(nodeId, null) {
 
   def this(nodeId: Int, entries: ListBuffer[Point]) = {
     this(nodeId)
-    setEntries(entries.to(ListBuffer))
+    setEntries(entries.asInstanceOf[ListBuffer[GeometricObject]])
   }
 
   override def isLeaf: Boolean = true

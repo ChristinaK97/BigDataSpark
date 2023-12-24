@@ -5,11 +5,11 @@ import Geometry.{GeometricObject, Point, Rectangle}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class NonLeafNode(nodeId: Int) extends TreeNode(nodeId) {
+class NonLeafNode(nodeId: Int) extends TreeNode(nodeId, null) {
 
   def this(nodeId: Int, entries: ListBuffer[Rectangle]) = {
     this(nodeId)
-    setEntries(entries.to(ListBuffer))
+    setEntries(entries.asInstanceOf[ListBuffer[GeometricObject]])
   }
 
   override def isLeaf: Boolean = false

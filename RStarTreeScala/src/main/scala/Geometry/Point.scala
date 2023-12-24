@@ -55,5 +55,15 @@ class Point extends GeometricObject {
     Math.sqrt(dist)
   }
 
+  override def serialize: String = {
+    val sb = new StringBuilder()
+    coordinates.zipWithIndex.foreach { case (coordinate, dim) =>
+      sb.append(coordinate)
+      if(dim < N-1)
+        sb.append(",")
+    }
+    sb.toString()
+  }
+
 }
 

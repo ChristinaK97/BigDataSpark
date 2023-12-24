@@ -22,6 +22,11 @@ class Rectangle extends GeometricObject {
     this.pM = pM
   }
 
+  def this(childptr: Int, pmCoordinates: Array[Double], pMCoordinates: Array[Double]) = {
+    this(new Point(pmCoordinates), new Point(pMCoordinates))
+    childPtr = childptr
+  }
+
   /** Takes an Int 'N' to create new Points */
   def this(N: Int) {
     this(new Point(N), new Point(N))
@@ -324,5 +329,12 @@ class Rectangle extends GeometricObject {
     overlapRectangle.getArea
   }
 
+  override def serialize: String = {
+    val sb: StringBuilder = new StringBuilder()
+    sb.append(childPtr).append(",")
+      .append(pm.serialize).append(",")
+      .append(pM.serialize)
+    sb.toString()
+  }
 
 }

@@ -5,11 +5,12 @@ import Util.Constants.UP_LIMIT
 
 import scala.collection.mutable.ListBuffer
 
-abstract class TreeNode(nodeId: Int) extends Iterable[GeometricObject] {
+abstract class TreeNode(nodeId: Int, entries: ListBuffer[GeometricObject]) extends Iterable[GeometricObject] {
 
   private val nodeID: Int = nodeId
-  private var NBitsInNode: Int = 0
-  private var entriesOnNode: ListBuffer[GeometricObject] = ListBuffer[GeometricObject]() // empty mutable list
+  private var NBitsInNode: Int = _
+  private var entriesOnNode: ListBuffer[GeometricObject] = _
+  setEntries(entries)
 
 
   /** Iterator for entriesOnNode */
@@ -22,18 +23,28 @@ abstract class TreeNode(nodeId: Int) extends Iterable[GeometricObject] {
   def getNumberOfEntries: Int =
     entriesOnNode.length
 
+
+  def setEntries(entries: ListBuffer[GeometricObject]): Unit = {
+    if (entries == null) {
+      entriesOnNode = ListBuffer[GeometricObject]()
+      NBitsInNode = 0
+    } else {
+      entriesOnNode = entries
+      NBitsInNode = getNumberOfEntries * entries.head.getMemorySize
+    }
+  }
+
+
   def getEntries: ListBuffer[GeometricObject] =
     entriesOnNode
 
   def getEntry(index: Int): GeometricObject =
     entriesOnNode(index)
 
-  def setEntries(entries: ListBuffer[GeometricObject]): Unit =
-    this.entriesOnNode = entries
 
-  def addEntry(node: GeometricObject): Unit = {
-    entriesOnNode += node
-    NBitsInNode += node.getMemorySize
+  def addEntry(entry: GeometricObject): Unit = {
+    entriesOnNode += entry
+    NBitsInNode += entry.getMemorySize
   }
 
   def deleteEntry(splitIndex: Int): Unit =
@@ -47,7 +58,20 @@ abstract class TreeNode(nodeId: Int) extends Iterable[GeometricObject] {
 
   def isLeaf: Boolean
 
-  //def sortEntriesBy[T <: GeometricObject](axis:Int): ListBuffer[T]
+ def serialize: String = {
+   val sb: StringBuilder = new StringBuilder()
+
+   sb.append(nodeID).append("|")
+     .append(if(isLeaf) "1" else "0").append("|")
+     .append(NBitsInNode).append("|")
+
+   this.zipWithIndex.foreach{ case (entry, index) =>
+     sb.append(entry.serialize)
+     if(index < getNumberOfEntries-1)
+       sb.append("|")
+   }
+   sb.toString()
+ }
 
 
 }
