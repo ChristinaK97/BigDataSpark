@@ -35,7 +35,7 @@ class ReInsert(treeNode: TreeNode) {
     val splitIndex = (node.getNumberOfEntries * 0.3).toInt
 
     entrySDistance.take(splitIndex).foreach{case (index, _) =>
-      toReInsert += (node.getEntry(index), reInsertLevel)
+      toReInsert += ((node.getEntry(index), reInsertLevel))
     }
     toReInsert
   }
