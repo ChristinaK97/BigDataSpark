@@ -240,11 +240,11 @@ class CreateRStarTree {
     //toInclude.clear()
     val nsp: NodeSplit = new NodeSplit(nextNodeID)
     nextNodeID += 1
-    val (MBR1: Rectangle, node1: TreeNode, MBR2: Rectangle, node2: TreeNode) = nsp.splitNode(node)
-    MBR1.setChildID(node1.getNodeID)
-    MBR2.setChildID(node2.getNodeID)
-    toInclude.push(MBR1)
-    toInclude.push(MBR2)
+    val (mbr1: Rectangle, node1: TreeNode, mbr2: Rectangle, node2: TreeNode) = nsp.splitNode(node)
+    mbr1.setChildID(node1.getNodeID)
+    mbr2.setChildID(node2.getNodeID)
+    toInclude.push(mbr1)
+    toInclude.push(mbr2)
     indexfile.writeNodeToFile(node1)
     indexfile.writeNodeToFile(node2)
   }
