@@ -6,8 +6,7 @@ class Rectangle extends GeometricObject {
 
   private var pm: Point = _     //bottom left corner point
   private var pM: Point = _     //upper right corner point
-
-  //TODO: add fields childptr, count
+  private var childPtr: Int = _
 
   /** Δημιουγεί rectangle με το pm ως  bottom left corner
    * και το pM ως  upper right corner
@@ -51,6 +50,10 @@ class Rectangle extends GeometricObject {
   /** 2 * N dims * sizeof(double) + sizeof(int) */
   override def getMemorySize: Int = 2 * N * sizeOfDouble + sizeOfInt
 
+  def getChildID: Int = childPtr
+
+  def setChildID(childID: Int):Unit =
+    childPtr = childID
 
 /*---------------------- Rectangle Properties --------------------------------*/
 
