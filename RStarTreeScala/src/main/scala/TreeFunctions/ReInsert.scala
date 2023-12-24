@@ -3,15 +3,15 @@ package TreeFunctions
 import Geometry.{GeometricObject, Point, Rectangle}
 import TreeStructure.TreeNode
 
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable
 
 /**
- * @param node : To TreeNode όπου προέκυψε overflow
+ * @param treeNode : To TreeNode όπου προέκυψε overflow
  */
 class ReInsert(treeNode: TreeNode) {
 
   private val node: TreeNode = treeNode
-  private val toReInsert: ListBuffer[(GeometricObject, Int)] = ListBuffer[(GeometricObject, Int)]()
+  private val toReInsert: mutable.Stack[(GeometricObject, Int)] = mutable.Stack[(GeometricObject, Int)]()
 
 
   /** 1. Επιστρέφει μια λίστα με τα στοιχεία (εγγραφές) που πρέπει να αφαιρεθούν
@@ -23,7 +23,7 @@ class ReInsert(treeNode: TreeNode) {
    *             - Rectangle αν node instanceof NonLeafNode
    *             - Point αν node instanceof LeafNode
    */
-  def makeToReInsert(MBR: Rectangle, reInsertLevel: Int): ListBuffer[(GeometricObject, Int)] = {
+  def makeToReInsert(MBR: Rectangle, reInsertLevel: Int): mutable.Stack[(GeometricObject, Int)] = {
 
     val entrySDistance =
       node.getEntries.zipWithIndex.map { case (entry, index) =>
