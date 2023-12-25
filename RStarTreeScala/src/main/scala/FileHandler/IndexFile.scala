@@ -4,19 +4,27 @@ import Geometry.{Point, Rectangle}
 import TreeStructure.{LeafNode, NonLeafNode, TreeNode}
 import Util.Constants.UP_LIMIT
 
-import java.io.RandomAccessFile
+import java.io.{File, RandomAccessFile}
 import java.nio.charset.StandardCharsets
 import scala.collection.mutable.ListBuffer
 
-class IndexFile {
+class IndexFile() {
 
-  private val BLOCK_CAPACITY = UP_LIMIT * 2
+  private var BLOCK_CAPACITY = UP_LIMIT * 2
   private val INDEXFILE_PATH = "indexfile.txt"
+  resetIndexfile()
   private val indexfile = new RandomAccessFile(INDEXFILE_PATH, "rw")
   private val metadata: Metadata = new Metadata()
 
   private var IOs: Int = 0
-  private val N = 5  // TODO: read from main
+  private var N = 2  // TODO: read from main
+
+  // for testing
+  def this(N_ : Int, CAPACITY: Int) = {
+    this()
+    BLOCK_CAPACITY = CAPACITY
+    N = N_
+  }
 
 
   def updateMetadata(rootID: Int, treeHeight: Int) : Unit = {
@@ -83,6 +91,17 @@ class IndexFile {
 
 // Random Access File  -------------------------------------------------------------------------------------------------
 
+
+  private def resetIndexfile() : Unit = {
+    val file = new File(INDEXFILE_PATH)
+    if (!file.exists() || file.delete())
+      file.createNewFile();
+  }
+
+  def closeFile(): Unit =
+    indexfile.close()
+
+
   /** Επιστρέφει το δείκτη του τέλους του αρχείου */
   private def nextPos: Long =
     indexfile.length
@@ -145,7 +164,7 @@ class IndexFile {
     serializedEntries.map(serializedRectangle =>
       new Rectangle(
         serializedRectangle(0).toInt,
-        serializedRectangle.slice(1,N).map(_.toDouble),
+        serializedRectangle.slice(1,N+1).map(_.toDouble),
         serializedRectangle.drop(N+1).map(_.toDouble)
       )
     ).to(ListBuffer)
