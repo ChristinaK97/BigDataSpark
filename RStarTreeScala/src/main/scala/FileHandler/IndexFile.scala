@@ -2,35 +2,128 @@ package FileHandler
 
 import Geometry.{Point, Rectangle}
 import TreeStructure.{LeafNode, NonLeafNode, TreeNode}
+import Util.Constants.UP_LIMIT
 
+import java.io.RandomAccessFile
+import java.nio.charset.StandardCharsets
 import scala.collection.mutable.ListBuffer
 
 class IndexFile {
+
+  private val BLOCK_CAPACITY = UP_LIMIT * 2
+  private val INDEXFILE_PATH = "indexfile.txt"
+  private val indexfile = new RandomAccessFile(INDEXFILE_PATH, "rw")
+  private val metadata: Metadata = new Metadata()
+
   private var IOs: Int = 0
-  // TODO: read from main
-  private val N = 5
+  private val N = 5  // TODO: read from main
+
 
   def updateMetadata(rootID: Int, treeHeight: Int) : Unit = {
 
   }
 
+// Write & Read  -------------------------------------------------------------------------------------------------------
+
+  /**
+   * nodeInfo :
+   * Leaf Node :
+   *    header: nodeInfo[0] : "nodeID|1|"
+   *    data:   nodeInfo[1] : "Point1     |...|PointK"
+   *                        : "x1,y1,..,n1|...|xK,yK,..,nK
+   *
+   * Non Leaf Node :
+   *    header: nodeInfo[0]= "nodeID|0|"
+   *    data:   nodeInfo[1]: "MBR1|...|MBRK"
+   *                       : "childNodeID,  pm_x1,pm_y1,..,pm_n1 , pM_x1,pM_y1,..,pM_n1|...
+   *                          -----------   --------------------   --------------------
+   *                            childPTR    pm coordinates[1..N]   pM coordinates[N+1..2N+1]
+   *
+   * nodeID|0 ή 1|Data1|Data2|...|DataN
+   *
+   */
+
+  /** Αποθηκεύει στο indexfile το TreeNode node.
+   * Αν υπήρχε ήδη στο αρχείο αυτό το node, τότε ενημερώνεται.
+   * Αν είναι νέο node τότε γράφεται στην τελευταία γραμμή του αρχείου.
+   */
   def writeNodeToFile(node: TreeNode): Unit = {
     IOs += 1
+    var (begin: Long, _: Int) = metadata.getBlockPos(node.getNodeID)
+    val data = turnToBinary(node.serialize)
+    val newSize = data.length
+    assert(newSize < BLOCK_CAPACITY, s"Node ${node.getNodeID}: Block size ${newSize} exceeded block capacity")
+
+    if(begin == -1) {
+      begin = nextPos
+      val emptySlot = Array.fill[Byte](BLOCK_CAPACITY - newSize)(' '.toByte )
+      writeToPos(emptySlot, begin + newSize)
+    }
+    metadata.addBlock(node.getNodeID, begin, newSize)
+    writeToPos(data, begin)
   }
 
+
+  /** Καλείται για να διαβάσει το node με id== nodeId από το αρχείο
+   * indexfile.
+   *
+   * @param nodeID : Το id του node που θα διαβαστεί
+   * @return : Ένα αντικείμενο TreeNode του node που θα διαβάσει και
+   *         το επιστρέφει. Αν το node είναι φύλλο, είναι instanceof LeafNode.
+   *         Αν το node είναι εσωτερικός κόμβος ή η ρίζα, είναι instanceof NonLeafNode.
+   */
   def retrieveNode(nodeID: Int): TreeNode = {
     IOs += 1
-    null
+    val (begin: Long, size: Int) = metadata.getBlockPos(nodeID)
+    assert(begin != -1, s"Node with id ${nodeID} not found in index file")
+    deserializeTreeNode(readData(begin, size))
   }
 
+
+
+// Random Access File  -------------------------------------------------------------------------------------------------
+
+  /** Επιστρέφει το δείκτη του τέλους του αρχείου */
+  private def nextPos: Long =
+    indexfile.length
+
+  /** Επιστρέφει πίνακα με τη δυαδική μορφή της συμβολοσειράς data. */
+  private def turnToBinary(data: String): Array[Byte] =
+    data.getBytes(StandardCharsets.UTF_8)
+
+
+
+  /** Γράφει τα δεδομένα με αρχή το pos στο αρχείο */
+  private def writeToPos(data: Array[Byte], pos: Long): Unit = {
+    indexfile.seek(pos)
+    indexfile.write(data)
+  }
+
+  /** Διάβασε τα δεδομένα από το αρχείο από τη θέση begin μέχρι
+   * τη θέση begin+size, τα δεδομένα ενός slot δηλαδή.
+   */
+  private def readData(begin: Long, size: Int): String =
+    new String(readBytes(begin, size), StandardCharsets.UTF_8)
+
+
+  /** Διάβασε τα δεδομένα από το αρχείο από τη θέση begin μέχρι
+   * τη θέση begin+size, τα δεδομένα ενός slot δηλαδή. */
+  private def readBytes(begin: Long, size: Int): Array[Byte] = {
+    val data = new Array[Byte](size)
+    indexfile.seek(begin)
+    indexfile.read(data)
+    data
+  }
+
+
+// Deserializers -------------------------------------------------------------------------------------------------------
   private def deserializeTreeNode(serializedNode: String): TreeNode = {
-    val nodeData: Array[String] = serializedNode.split("\\|")
-    val NBitsInNode: Int = nodeData(2).toInt
+    val nodeData = serializedNode.split("\\|")
 
     deserializeTreeNode(
       nodeData(0).toInt,       //nodeID
       nodeData(1).equals("1"), //isLeaf
-      nodeData.drop(3).map(serializedEntry => serializedEntry.split(",")),
+      nodeData.drop(2).map(serializedEntry => serializedEntry.split(",")),
     )
 
   }

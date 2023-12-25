@@ -8,7 +8,7 @@ import scala.collection.mutable.ListBuffer
 abstract class TreeNode(nodeId: Int, entries: ListBuffer[GeometricObject]) extends Iterable[GeometricObject] {
 
   private val nodeID: Int = nodeId
-  private var NBitsInNode: Int = _
+  private var NBytesInNode: Int = _
   private var entriesOnNode: ListBuffer[GeometricObject] = _
   setEntries(entries)
 
@@ -27,10 +27,10 @@ abstract class TreeNode(nodeId: Int, entries: ListBuffer[GeometricObject]) exten
   def setEntries(entries: ListBuffer[GeometricObject]): Unit = {
     if (entries == null) {
       entriesOnNode = ListBuffer[GeometricObject]()
-      NBitsInNode = 0
+      NBytesInNode = 0
     } else {
       entriesOnNode = entries
-      NBitsInNode = getNumberOfEntries * entries.head.getMemorySize
+      NBytesInNode = getNumberOfEntries * entries.head.getMemorySize
     }
   }
 
@@ -44,7 +44,7 @@ abstract class TreeNode(nodeId: Int, entries: ListBuffer[GeometricObject]) exten
 
   def addEntry(entry: GeometricObject): Unit = {
     entriesOnNode += entry
-    NBitsInNode += entry.getMemorySize
+    NBytesInNode += entry.getMemorySize
   }
 
   def deleteEntry(splitIndex: Int): Unit =
@@ -54,7 +54,7 @@ abstract class TreeNode(nodeId: Int, entries: ListBuffer[GeometricObject]) exten
     entriesOnNode -= node
 
   def isFull: Boolean =
-    NBitsInNode >= UP_LIMIT
+    NBytesInNode >= UP_LIMIT
 
   def isLeaf: Boolean
 
@@ -63,7 +63,6 @@ abstract class TreeNode(nodeId: Int, entries: ListBuffer[GeometricObject]) exten
 
    sb.append(nodeID).append("|")
      .append(if(isLeaf) "1" else "0").append("|")
-     .append(NBitsInNode).append("|")
 
    this.zipWithIndex.foreach{ case (entry, index) =>
      sb.append(entry.serialize)
