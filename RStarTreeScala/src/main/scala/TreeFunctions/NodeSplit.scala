@@ -2,14 +2,12 @@ package TreeFunctions
 
 import Geometry.Rectangle
 import TreeStructure.{LeafNode, NonLeafNode, TreeNode}
+import Util.Constants.N
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class NodeSplit(nextId: Int) {
-
-  //TODO get from main
-  private val N: Int = 5
 
   private var splitIndex: Int = _
   private val nextID: Int = nextId

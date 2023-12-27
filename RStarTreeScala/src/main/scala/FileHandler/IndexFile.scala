@@ -2,28 +2,26 @@ package FileHandler
 
 import Geometry.{Point, Rectangle}
 import TreeStructure.{LeafNode, NonLeafNode, TreeNode}
-import Util.Constants.UP_LIMIT
+import Util.Constants.{N, UP_LIMIT}
 
 import java.io.{File, RandomAccessFile}
 import java.nio.charset.StandardCharsets
 import scala.collection.mutable.ListBuffer
 
-class IndexFile() {
+class IndexFile(rTreeID: Long) {
 
   private var BLOCK_CAPACITY = UP_LIMIT * 2
-  private val INDEXFILE_PATH = "indexfile.txt"
+  private val INDEXFILE_PATH = s"indexfile_$rTreeID.txt"
   resetIndexfile()
   private val indexfile = new RandomAccessFile(INDEXFILE_PATH, "rw")
   private val metadata: Metadata = new Metadata()
 
   private var IOs: Int = 0
-  private var N = 2  // TODO: read from main
 
   // for testing
-  def this(N_ : Int, CAPACITY: Int) = {
-    this()
+  def this(CAPACITY: Int, testing: Boolean) = {
+    this(-1)
     BLOCK_CAPACITY = CAPACITY
-    N = N_
   }
 
 
@@ -65,6 +63,7 @@ class IndexFile() {
     if(begin == -1) {
       begin = nextPos
       val emptySlot = Array.fill[Byte](BLOCK_CAPACITY - newSize)(' '.toByte )
+      emptySlot.update(emptySlot.length-1, '\n'.toByte)
       writeToPos(emptySlot, begin + newSize)
     }
     metadata.addBlock(node.getNodeID, begin, newSize)

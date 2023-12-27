@@ -2,13 +2,15 @@ package FileHandler
 
 import Geometry.{Point, Rectangle}
 import TreeStructure.{LeafNode, NonLeafNode, TreeNode}
+import Util.Constants.N
 
 import scala.collection.mutable.ListBuffer
 
 object IndexFileReadWrite {
 
   def main(args: Array[String]): Unit = {
-    val indexFile = new IndexFile(2, 100)
+    N = 2
+    val indexFile = new IndexFile(100, true)
     // test write
     test_write_non_leaf_node(indexFile)
     test_write_leaf_node(indexFile)

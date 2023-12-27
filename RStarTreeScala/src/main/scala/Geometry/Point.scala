@@ -1,15 +1,15 @@
 package Geometry
 
-import Util.Constants.sizeOfDouble
+import Util.Constants.{N, sizeOfDouble}
 
-class Point extends GeometricObject {
+class Point extends GeometricObject with Serializable {
 
   private var coordinates: Array[Double] = _ // Declaring coordinates as a mutable empty array
 
   /** Constructor to initialize coordinates with an array of length N */
-  def this(N: Int) {
+  def this(nDims: Int) {
     this()
-    coordinates = Array.ofDim[Double](N)
+    coordinates = Array.ofDim[Double](nDims)
   }
 
   /** Constructor to set the coordinates field */
@@ -24,7 +24,7 @@ class Point extends GeometricObject {
 
 
   /** The number of dimensions */
-  def N: Int =
+  def nDims: Int =
     coordinates.length
 
   /** N dims * sizeof(double) */

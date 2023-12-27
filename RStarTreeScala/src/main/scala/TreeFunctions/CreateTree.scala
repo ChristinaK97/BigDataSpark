@@ -3,13 +3,15 @@ package TreeFunctions
 import FileHandler.IndexFile
 import Geometry.{GeometricObject, Point, Rectangle}
 import TreeStructure.{LeafNode, NonLeafNode, TreeNode}
-import org.apache.spark.rdd.RDD
+import Util.Logger
 
 import scala.collection.mutable
 
-class CreateRStarTree {
+class CreateTree(indexFile: IndexFile, logger_ : Logger) {
 
-  private val indexfile: IndexFile = new IndexFile()
+  private val logger: Logger = logger_
+
+  private val indexfile: IndexFile = indexFile
 
   /* κόμβος ρίζα του δέντρου, όταν είναι ο μοναδικός κόμβος του δέντρου είναι φύλλο
   */ private var root: TreeNode = new LeafNode(1)
@@ -61,30 +63,34 @@ class CreateRStarTree {
   /** 1. Καλείται για να δημιουργήσει ένα νέο δέντρο από τις
    * εγγραφές που είναι αποθηκευμένες στο datafile.
    */
-  def this(pointsRDD: RDD[Point]) = {
-    this()
-    pointsRDD.foreach(point => {
+  def this(indexFile: IndexFile, pointsPartition: Iterator[Point], logger_ : Logger) = {
+    this(indexFile, logger_)
+    pointsPartition.foreach(point => {
+      logger.info(s">> Point $counter : ${point.serialize}")
       toInsert += point
-      insertPoint()
+      insertFrom_toReInsert_toInsert()
     })
+    indexFile.writeNodeToFile(root)
   }
 
 
-  private def insertPoint(): Unit = {
+  private def insertFrom_toReInsert_toInsert(): Unit = {
     var continue = true
     while(continue) {
 
       if( toReInsert.nonEmpty ){
+        logger.info(s"\ttoReInsert contains elements # ${toReInsert.length}")
         val (geoObj: GeometricObject, reInsertLevel: Int) = toReInsert.pop()
         /* Οι εγγραφές θα πρέπει να επανεισαχθούν στο επίπεδο από το οποίο βγήκαν
 			   * ώστε το δέντρο να είναι ζυγιασμένο (όλα τα φύλλα στο ίδιο επίπεδο) */
         val level = treeHeight + 1 - reInsertLevel - (if(NewRootMade) 1 else 0)  // Αν κατα την διαδικασία επανεισαγωγής το ύψος του δέντρου μεγάλωσε κατα ένα
         // Επανεισηγαγε το πάνω στοιχείο της στοίβας toReInsert
         toInclude.push(geoObj)
-        insertObjects(level)
+        insertFrom_toInclude(level)
       }
 
       else if( toInsert.nonEmpty ){
+        logger.info(s"\ttoInsert contains elements # ${toInsert.length}")
         counter += 1
         // δεν δημιουργήθηκε νέα ρίζα σε αυτόν τον κύκλο εισαγωγής
         NewRootMade = false
@@ -94,17 +100,19 @@ class CreateRStarTree {
 
         // Εισηγαγε το πάνω στοιχείο της στοίβας toInsert
         toInclude += toInsert.pop()
-        insertObjects(1)  //στα φύλλα αφού είναι point. Μετράει ανάποδα
+        insertFrom_toInclude(1)  //στα φύλλα αφού είναι point. Μετράει ανάποδα
       }
 
-      else //δεν υπάρχουν άλλες εγγραφές για εισαγωγή σε αυτόν τον κύκλο, τελος
+      else {//δεν υπάρχουν άλλες εγγραφές για εισαγωγή σε αυτόν τον κύκλο, τελος
+        logger.info("\tNo more records. Return from insertPoint")
         continue = false
+      }
     }
   }
 
 
 
-  private def insertObjects(level: Int): Unit = {
+  private def insertFrom_toInclude(level: Int): Unit = {
     while (toInclude.nonEmpty) {
 
       val geoObj: GeometricObject = toInclude.pop()
@@ -177,7 +185,7 @@ class CreateRStarTree {
    * επίπεδο εισαγωγής. Εκεί απόθηκεύει τον κόμβο που επιλέχθηκε στο τέλος του μονοπατιού,
    * με τιμή entryIndex = -1.
    *
-   * @param O     Το γεωμετρικό στοιχείο της εγγραφής.
+   * @param geoObj     Το γεωμετρικό στοιχείο της εγγραφής.
    * @param level : Το επίπεδο εισαγωγής μετρώντας ανάποδα
    */
   private def chooseSubtree(geoObj: GeometricObject, level: Int): Unit = {

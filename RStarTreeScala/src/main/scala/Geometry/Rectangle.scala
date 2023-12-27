@@ -1,6 +1,6 @@
 package Geometry
 
-import Util.Constants.{ONE_MM, sizeOfDouble, sizeOfInt}
+import Util.Constants.{N, ONE_MM, sizeOfDouble, sizeOfInt}
 
 class Rectangle extends GeometricObject {
 
@@ -28,8 +28,8 @@ class Rectangle extends GeometricObject {
   }
 
   /** Takes an Int 'N' to create new Points */
-  def this(N: Int) {
-    this(new Point(N), new Point(N))
+  def this(nDims: Int) {
+    this(new Point(nDims), new Point(nDims))
   }
 
   def this(P: Point) {
@@ -49,8 +49,8 @@ class Rectangle extends GeometricObject {
 
 
   /** The number of dimensions */
-  def N: Int =
-    pm.N
+  def nDims: Int =
+    pm.nDims
 
   /** 2 * N dims * sizeof(double) + sizeof(int) */
   override def getMemorySize: Int = 2 * N * sizeOfDouble + sizeOfInt

@@ -1,6 +1,7 @@
 package Util
 
 object Constants {
+  var N: Int = -1
   val sizeOfDouble: Int = 8
   val sizeOfInt: Int = 4
   val ONE_MM: Double = 0.001
