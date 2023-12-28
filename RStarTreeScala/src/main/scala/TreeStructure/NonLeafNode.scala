@@ -22,6 +22,7 @@ class NonLeafNode(nodeId: Int) extends TreeNode(nodeId, null) {
 /* ---------------------Για την chooseSubtree-----------------------------------------------*/
 
   private var chosenRectangles: mutable.HashMap[Int, Rectangle] = _
+  private var evaluation: mutable.HashMap[Int, Double] = _
 
 
   def chosenEntry(O: GeometricObject, childPointersToLeaf: Boolean): Int = {
@@ -55,7 +56,8 @@ class NonLeafNode(nodeId: Int) extends TreeNode(nodeId, null) {
     if (chosenEntry != -1)
       return chosenEntry
 
-    chosenEntry  //σφάλμα. δεν πρέπει να επιστρέφει ποτέ -1.
+    // αν ισοβαθμία και στα 3 κριτίρια, διάλεξε το expanded rectangle με το ελάχιστο εμβαδόν
+    evaluation.minBy(_._2)._1
   }
 
 
@@ -67,7 +69,7 @@ class NonLeafNode(nodeId: Int) extends TreeNode(nodeId, null) {
    *         που επιλέχθηκε για να γίνει η εισαγωγή του αντικειμένου.
    */
   private def minOverlapEnlargement: Int = {
-    val evaluation = mutable.HashMap[Int, Double]()
+    evaluation = mutable.HashMap[Int, Double]()
 
     //για κάθε υποψήφιο ορθογώνιο i
     chosenRectangles.foreach { case (i, expandedR_i) => {
@@ -87,7 +89,9 @@ class NonLeafNode(nodeId: Int) extends TreeNode(nodeId, null) {
       }
       evaluation += (i -> SOverlapArea)
     }}
-    choose(evaluation)
+    //println("Min overlap enlargement")
+    //evaluation.foreach{case (k,v) => println(s"\tk = $k  v = $v")}
+    choose()
   }
 
 
@@ -98,7 +102,7 @@ class NonLeafNode(nodeId: Int) extends TreeNode(nodeId, null) {
    *         που επιλέχθηκε για να γίνει η εισαγωγή του αντικειμένου.
    */
   private def minAreaEnlargement: Int = {
-    val evaluation = mutable.HashMap[Int, Double]()
+    evaluation = mutable.HashMap[Int, Double]()
     //για κάθε υποψήφιο ορθογώνιο i
     chosenRectangles.foreach { case (i, expandedR_i) =>
       /* Αύξηση του εμβαδού του i =
@@ -109,7 +113,9 @@ class NonLeafNode(nodeId: Int) extends TreeNode(nodeId, null) {
         (expandedR_i.getArea - getRectangle(i).getArea)
       )
     }
-    choose(evaluation)
+    //println("Min area enlargement")
+    //evaluation.foreach { case (k, v) => println(s"\tk = $k  v = $v") }
+    choose()
   }
 
 
@@ -120,24 +126,25 @@ class NonLeafNode(nodeId: Int) extends TreeNode(nodeId, null) {
    *         που επιλέχθηκε για να γίνει η εισαγωγή του αντικειμένου.
    */
   private def minArea: Int = {
-    val evaluation = new mutable.HashMap[Int, Double]
+    evaluation = new mutable.HashMap[Int, Double]
     //για κάθε υποψήφιο ορθογώνιο i
-    this.zipWithIndex.foreach{case (rectangle: Rectangle, i) =>
-      evaluation += (i -> rectangle.getArea)
+    chosenRectangles.foreach { case (i, expandedR_i) =>
+      evaluation += (i -> expandedR_i.getArea)
     }
-    choose(evaluation)
+    //println("Min area")
+    //evaluation.foreach { case (k, v) => println(s"\tk = $k  v = $v") }
+    choose()
   }
 
 
   /** Καλείται από κάθε κριτήριο.
-   *
-   * @param evaluation : Η τιμή κάθε ορθογωνίου στο εκάστοτε κριτήριο
+   *  evaluation : Η τιμή κάθε ορθογωνίου στο εκάστοτε κριτήριο
    *                   (K1.Overlap Area Enlargement, K2.Area Enlargement, K3.Area)
    * @return Αν από το εκάστοτε κριτήριο προέκυψε μόνο ένα υποψήφιο
    *         ορθογώνιο, τη θέση του στο entriesOnNode
    *         Αλλιώς αν παραπάνω από ένα υποψήφια, επιστρέφει null.
    */
-  private def choose(evaluation: mutable.HashMap[Int,Double]): Int = {
+  private def choose(): Int = {
     val minValue: Double = evaluation.values.min
 
     /* για κάθε υποψήφιο ορθογώνιο
@@ -149,6 +156,7 @@ class NonLeafNode(nodeId: Int) extends TreeNode(nodeId, null) {
         else 0.0
       diffPercentage <= 0.2
     }
+    //println(s"\tchoose results = ${chosenRectangles.toString()}")
     //αν υπάρχει μόνο ένα υποψήφιο ορθωγώνιο
     if(chosenRectangles.size == 1) chosenRectangles.head._1
     // αν υπάρχουν παραπάνω από ένα υποψήφια
