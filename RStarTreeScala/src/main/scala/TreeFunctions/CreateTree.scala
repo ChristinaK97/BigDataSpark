@@ -79,7 +79,7 @@ class CreateTree(indexFile: IndexFile, logger_ : Logger) {
     while(continue) {
 
       if( toReInsert.nonEmpty ){
-        logger.info(s"\ttoReInsert contains elements # ${toReInsert.length}")
+        logger.info(s"\ttoReInsert contains elements # ${toReInsert.length} \t (toInsert = ${toInsert.size}\t toInclude = ${toInclude.size})")
         val (geoObj: GeometricObject, reInsertLevel: Int) = toReInsert.pop()
         /* Οι εγγραφές θα πρέπει να επανεισαχθούν στο επίπεδο από το οποίο βγήκαν
 			   * ώστε το δέντρο να είναι ζυγιασμένο (όλα τα φύλλα στο ίδιο επίπεδο) */
@@ -90,7 +90,7 @@ class CreateTree(indexFile: IndexFile, logger_ : Logger) {
       }
 
       else if( toInsert.nonEmpty ){
-        logger.info(s"\ttoInsert contains elements # ${toInsert.length}")
+        logger.info(s"\ttoInsert contains elements # ${toInsert.length} \t (toReInsert = ${toReInsert.size}\t toInclude = ${toInclude.size})")
         counter += 1
         // δεν δημιουργήθηκε νέα ρίζα σε αυτόν τον κύκλο εισαγωγής
         NewRootMade = false
@@ -121,7 +121,9 @@ class CreateTree(indexFile: IndexFile, logger_ : Logger) {
       //Το node στο επίπεδο εισαγωγής
       var (currentNode, entryIndex) = path.pop()
       //Εισηγαγε το στοιχείο στο δέντρο στο επιλεγμένο node.
+      logger.info(s"\tgeoObject = ${geoObj.serialize} to be inserted to node [${currentNode.getNodeID}] (isLeaf ${currentNode.isLeaf}) at level = $level ...")
       currentNode.addEntry(geoObj)
+      logger.info(s"\t\t#entries = ${currentNode.getNumberOfEntries} (${currentNode.getNBytes} bytes) \t\t toInclude.size = ${toInclude.size}")
 
       /* Αν με την εισαγωγή ο κόμβος γέμισε -------------------------- */
       if (currentNode.isFull) {
@@ -134,9 +136,11 @@ class CreateTree(indexFile: IndexFile, logger_ : Logger) {
         if (Split) {
           //Αν το split έγινε σε κόμβο όχι ρίζα
           if (path.nonEmpty) {
-            //Σβήσε το MBR από το γονέα του splitted node.
+            // Αντικατέστησε το parent MBR του κόμβου που έγινε overflow με τα parent MBRs που προέκυψαν από το split
             val (currentNode, splitIndex) = path.pop()
-            currentNode.deleteEntry(splitIndex)
+            currentNode.deleteEntry(splitIndex)        //Σβήσε το parent MBR του κόμβου όπου έγινε split
+            currentNode.addEntry(toInclude.pop())     // Add new parent mbr1
+            currentNode.addEntry(toInclude.pop())     // Add new parent mbr2
 
           //Αλλίως αν διασπάστηκε η ρίζα του δέντρου
           } else {
@@ -149,6 +153,7 @@ class CreateTree(indexFile: IndexFile, logger_ : Logger) {
             indexfile.updateMetadata(root.getNodeID, treeHeight)
             //Βάλε στη νέα ρίζα τα MBRs από το split της παλιάς ρίζας
             toInclude.popAll().foreach(geoObj => root.addEntry(geoObj))
+            logger.info(s"\tMake new root [${root.getNodeID}] with # entries = ${root.getNumberOfEntries}")
             //Τέλος διαδικασίας εισαγωγής του στοιχείου
           }
         } //end if Split
@@ -156,6 +161,8 @@ class CreateTree(indexFile: IndexFile, logger_ : Logger) {
 
       /* Αλλίως αν με την εισαγωγή ο κόμβος δεν γέμισε ----------------- */
       else { // ADJUST PATH
+        // Γράψε τον κόμβο όπου έγινε η εισαγωγή του στοιχείου
+        indexfile.writeNodeToFile(currentNode)
         while (path.nonEmpty) {  //Μέχρι να φτάσεις στη ρίζα
           val (parentNode, parentIndex) = path.pop()
           // entryIndex != -1 => Κόμβος πιο ψηλά στο δέντρο.  Expand το MBR του γονέα για να συμπεριλάβει το expanded MBR του παιδιού
@@ -189,13 +196,15 @@ class CreateTree(indexFile: IndexFile, logger_ : Logger) {
    * @param level : Το επίπεδο εισαγωγής μετρώντας ανάποδα
    */
   private def chooseSubtree(geoObj: GeometricObject, level: Int): Unit = {
+    logger.info(s"\tChoose subtree for <${geoObj.serialize}> \t level = $level")
     var levelVar = level
     path = mutable.Stack[(TreeNode, Int)]()
     var current = root  //ξεκίνα από τη ρίζα
 
-    if(treeHeight == 1)      //Η ρίζα είναι ο μοναδικός κόμβος του δέντρου
+    if(treeHeight == 1) {    //Η ρίζα είναι ο μοναδικός κόμβος του δέντρου
+      logger.info(s"\t\tAdd in root [${root.getNodeID}] with # entries = ${root.getNumberOfEntries}")
       path.push((root, -1))  //η εισαγωγή του νέου στοιχείου θα γίνει στη ρίζα
-
+    }
     else {
       //Μέχρι να φτάσεις στο επίπεδο εισαγωγής
       while (levelVar < treeHeight) {
@@ -204,11 +213,13 @@ class CreateTree(indexFile: IndexFile, logger_ : Logger) {
                       .chosenEntry(geoObj, path.size == treeHeight-2)
 
         path.push((current, chosenEntryIndex))
+        logger.info(s"\t\t> For l = $levelVar node [${current.getNodeID}] (isLeaf ${current.isLeaf}) with # entries = ${current.getNumberOfEntries}. Chosen entry index = $chosenEntryIndex")
         val childID = current.getEntry(chosenEntryIndex).asInstanceOf[Rectangle].getChildID
         //current <- current.load(current.getChild)
         current = indexfile.retrieveNode(childID)
         levelVar += 1
       }
+      logger.info(s"\t\t> For l = $levelVar node [${current.getNodeID}] (isLeaf ${current.isLeaf}) with # entries = ${current.getNumberOfEntries}")
       //κόμβος στο επίπεδο εισαγωγής. εδώ θα εισαχθεί η εγγραφή
       path.push((current, -1))
     }
@@ -224,6 +235,7 @@ class CreateTree(indexFile: IndexFile, logger_ : Logger) {
     /* Αν το node είναι ρίζα ή έχει ξαναεκτελεστεί reinsert σε αυτό το επίπεδο
 		 * σε αυτόν τον κύκλο εισαγωγής, κάνε split τον κόμβο
 		 */
+    logger.info(s"Overflow treatment for node [${node.getNodeID}] at level = $level. isLeaf ${node.isLeaf}")
     Split = node.getNodeID == root.getNodeID || reinsertOnLevel(level)
     ReInsert = !Split
     if(Split)
@@ -246,15 +258,17 @@ class CreateTree(indexFile: IndexFile, logger_ : Logger) {
    */
   private def split(node: TreeNode): Unit = {
     //toInclude.clear()
+    logger.info(s"\tSplit node [${node.getNodeID}] with # entries = ${node.getNumberOfEntries}")
     val nsp: NodeSplit = new NodeSplit(nextNodeID)
     nextNodeID += 1
     val (mbr1: Rectangle, node1: TreeNode, mbr2: Rectangle, node2: TreeNode) = nsp.splitNode(node)
     mbr1.setChildID(node1.getNodeID)
     mbr2.setChildID(node2.getNodeID)
-    toInclude.push(mbr1)
     toInclude.push(mbr2)
+    toInclude.push(mbr1)
     indexfile.writeNodeToFile(node1)
     indexfile.writeNodeToFile(node2)
+    logger.info(s"\t\t(nodeA [${node1.getNodeID}], #entries : ${node1.getNumberOfEntries}, MBRA = ${mbr1.serialize})\n\t\t(nodeB [${node2.getNodeID}], #entries : ${node2.getNumberOfEntries}, MBRB = ${mbr2.serialize})")
   }
 
 
