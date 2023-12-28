@@ -65,5 +65,8 @@ class Point extends GeometricObject with Serializable {
     sb.toString()
   }
 
+  override def toString: String =
+    serialize
+
 }
 

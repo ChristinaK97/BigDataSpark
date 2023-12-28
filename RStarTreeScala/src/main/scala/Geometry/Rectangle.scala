@@ -337,4 +337,7 @@ class Rectangle extends GeometricObject {
     sb.toString()
   }
 
+  override def toString: String =
+    serialize
+
 }

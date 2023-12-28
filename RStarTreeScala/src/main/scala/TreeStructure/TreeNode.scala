@@ -1,6 +1,6 @@
 package TreeStructure
 
-import Geometry.GeometricObject
+import Geometry.{GeometricObject, Point, Rectangle}
 import Util.Constants.UP_LIMIT
 
 import scala.collection.mutable.ListBuffer
@@ -43,6 +43,7 @@ abstract class TreeNode(nodeId: Int, entries: ListBuffer[GeometricObject]) exten
 
 
   def addEntry(entry: GeometricObject): Unit = {
+    assert((isLeaf && entry.isInstanceOf[Point]) || (!isLeaf && entry.isInstanceOf[Rectangle]))
     entriesOnNode += entry
     NBytesInNode += entry.getMemorySize
   }
@@ -52,6 +53,8 @@ abstract class TreeNode(nodeId: Int, entries: ListBuffer[GeometricObject]) exten
 
   def deleteEntry(node: GeometricObject): Unit =
     entriesOnNode -= node
+
+  def getNBytes: Int = NBytesInNode
 
   def isFull: Boolean =
     NBytesInNode >= UP_LIMIT
@@ -71,6 +74,9 @@ abstract class TreeNode(nodeId: Int, entries: ListBuffer[GeometricObject]) exten
    }
    sb.toString()
  }
+
+  override def toString: String =
+    serialize
 
 
 }

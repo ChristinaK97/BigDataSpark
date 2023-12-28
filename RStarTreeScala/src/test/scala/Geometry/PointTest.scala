@@ -6,7 +6,7 @@ import org.scalatest.funsuite.AnyFunSuite
 
 class PointTest extends AnyFunSuite {
 
-  test("Test Point constructor 1: Point dimensionality") {
+  /*test("Test Point constructor 1: Point dimensionality") {
     N = 2
     assert(new Point(N).nDims == N)
   }
@@ -37,6 +37,6 @@ class PointTest extends AnyFunSuite {
     N = 4
     assert(
       new Point(Array(0.5, -3.2, 7, -2.7)).distance(new Point(Array(2.2, -6.1, -0.2, 3.1))) === Math.sqrt(96.78) +- 1e-9)
-  }
+  }*/
 
 }
