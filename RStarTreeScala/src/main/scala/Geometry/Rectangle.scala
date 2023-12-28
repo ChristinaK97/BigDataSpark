@@ -34,8 +34,8 @@ class Rectangle extends GeometricObject {
 
   def this(P: Point) {
     this()
-    this.pm = new Point(P.getCoordinates)
-    this.pM = new Point(P.getCoordinates)
+    this.pm = new Point(P.getCoordinates.clone())
+    this.pM = new Point(P.getCoordinates.clone())
     expandRectangle(P)
   }
 

@@ -43,4 +43,15 @@ class RectangleTest extends AnyFunSuite {
                     new Point(Array(3.1, 0.2, -1.8, 1.48, 4.2))).getArea === 58.23216 +- 1e-9)
   }
 
+  test("Rectangle Overlap") {
+    N = 2
+    val R1 = new Rectangle(new Point(Array(0.08, 0.362)),
+                           new Point(Array(0.284, 0.53)))
+    val R2 = new Rectangle(new Point(Array(0.282, 0.12)),
+                           new Point(Array(0.43, 0.364)))
+    assert(R1.overlaps(R2))
+    assert(R2.overlaps(R1))
+    assert(R1.overlapArea(R2) > 0)
+  }
+
 }
