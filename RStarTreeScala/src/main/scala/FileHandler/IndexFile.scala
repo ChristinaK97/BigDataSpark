@@ -10,7 +10,9 @@ import scala.collection.mutable.ListBuffer
 
 class IndexFile(rTreeID: Long) {
 
-  private var BLOCK_CAPACITY = UP_LIMIT * 2
+  private val K: Int = UP_LIMIT / (16 * N + 4)
+  private var BLOCK_CAPACITY: Int = 8 + K * (4 + 44 * N)
+
   private val INDEXFILE_PATH = s"indexfile_$rTreeID.txt"
   resetIndexfile()
   private val indexfile = new RandomAccessFile(INDEXFILE_PATH, "rw")

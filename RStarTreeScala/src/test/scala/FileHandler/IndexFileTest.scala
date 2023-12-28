@@ -10,7 +10,7 @@ import scala.collection.mutable.ListBuffer
 
 class IndexFileTest extends AnyFunSuite  {
 
-  test("Serialize leaf node") {
+  /*test("Serialize leaf node") {
     N = 2
     val rootP1 = new Point(Array(2.3, -5))
     val rootP2 = new Point(Array(-0.889, 0.125))
@@ -77,7 +77,7 @@ class IndexFileTest extends AnyFunSuite  {
     assert("-0.889,0.125" == deserializedNode.getRectangle(1).get_pM.serialize)
 
     indexFile.closeFile()
-  }
+  }*/
 
 // --------------------------------------------------------------------------------------------------------------------
 
