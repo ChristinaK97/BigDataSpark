@@ -28,6 +28,7 @@ class Point extends GeometricObject with Serializable {
   def makeCopy: Point =
     new Point(pointID, coordinates.clone())
 
+  def getPointID: Int = pointID
 
   /** The number of dimensions */
   def nDims: Int =

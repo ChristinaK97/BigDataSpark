@@ -8,6 +8,7 @@ class Metadata {
   private var rootID = 1
   private var treeHeight = 1
   private var numOfNodes = 1
+  private var numOfPoints = 0
 
   def addBlock(nodeID: Int, begin: Long, size: Int): Unit =
     nodeIndexer.put(nodeID, (begin, size))
@@ -24,5 +25,8 @@ class Metadata {
 
   def getNumOfNodes: Int = numOfNodes
   def setNumOfNodes(newNumOfNodes: Int): Unit = {numOfNodes = newNumOfNodes}
+
+  def getNumOfPoints: Int = numOfPoints
+  def setNumOfPoints(nPoints: Int): Unit = {numOfPoints = nPoints}
 
 }

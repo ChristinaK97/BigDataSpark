@@ -73,6 +73,7 @@ class CreateTree(indexfile: IndexFile, logger : Logger) {
     })
     indexFile.writeNodeToFile(root)                                                                                     ; logger.info(s"# IOs = ${indexFile.getIOs}\t tree height = $treeHeight\t # nodes = ${nextNodeID - 1}\t root node id [${root.getNodeID}] with childPtrs = ${if(!root.isLeaf) root.map(entry=> entry.asInstanceOf[Rectangle].getChildID) else root.isLeaf}")
     indexfile.updateMetadata(root.getNodeID, treeHeight, nextNodeID-1)
+    indexFile.setNumOfPoints(counter)
   }
 
 

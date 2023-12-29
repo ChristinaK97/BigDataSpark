@@ -41,6 +41,8 @@ class IndexFile(rTreeID: Long) {
   def getTreeHeight: Int = metadata.getTreeHeight
   def getRootID: Int = metadata.getRootID
   def getNumOfNodes: Int = metadata.getNumOfNodes
+  def getNumOfPoints: Int = metadata.getNumOfPoints
+  def setNumOfPoints(numOfPoints: Int): Unit = metadata.setNumOfPoints(numOfPoints)
 
   // Write & Read  -------------------------------------------------------------------------------------------------------
 
