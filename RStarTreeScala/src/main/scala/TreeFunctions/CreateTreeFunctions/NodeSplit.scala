@@ -1,4 +1,4 @@
-package TreeFunctions
+package TreeFunctions.CreateTreeFunctions
 
 import Geometry.Rectangle
 import TreeStructure.{LeafNode, NonLeafNode, TreeNode}

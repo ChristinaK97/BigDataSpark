@@ -1,4 +1,4 @@
-package TreeFunctions
+package TreeFunctions.CreateTreeFunctions
 
 import Geometry.{GeometricObject, Point, Rectangle}
 import TreeStructure.TreeNode

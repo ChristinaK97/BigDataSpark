@@ -2,6 +2,7 @@ package TreeFunctions
 
 import FileHandler.IndexFile
 import Geometry.Point
+import TreeFunctions.CreateTreeFunctions.CreateTree
 import Util.Constants.N
 import Util.Logger
 

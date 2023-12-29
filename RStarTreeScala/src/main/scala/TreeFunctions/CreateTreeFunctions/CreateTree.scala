@@ -1,4 +1,4 @@
-package TreeFunctions
+package TreeFunctions.CreateTreeFunctions
 
 import FileHandler.IndexFile
 import Geometry.{GeometricObject, Point, Rectangle}
@@ -206,7 +206,7 @@ class CreateTree(indexFile: IndexFile, logger_ : Logger) {
    * επίπεδο εισαγωγής. Εκεί απόθηκεύει τον κόμβο που επιλέχθηκε στο τέλος του μονοπατιού
    *
    * @param geoObj: Το γεωμετρικό στοιχείο της εγγραφής.
-   * @param level : Το επίπεδο εισαγωγής μετρώντας ανάποδα
+   * @param level : Το επίπεδο εισαγωγής (root level == 1 , leaf level == treeHeight)
    */
   private def chooseSubtree(geoObj: GeometricObject, level: Int): Unit = {
     var levelVar = level                                                                                                ; logger.info(s"\tChoose subtree for <${geoObj.serialize}> \t level = $level  height = $treeHeight")
