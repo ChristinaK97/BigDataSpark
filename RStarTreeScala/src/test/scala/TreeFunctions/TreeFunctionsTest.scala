@@ -38,7 +38,7 @@ object TreeFunctionsTest {
     val nDims = points.head.nDims
     val rTree = new RStarTree(points.iterator, nDims)
     rTree.createTree(0)
-    //rTree.computeDatasetSkyline(false)
+    rTree.computeDatasetSkyline(false)
     rTree.close()
   }
 }

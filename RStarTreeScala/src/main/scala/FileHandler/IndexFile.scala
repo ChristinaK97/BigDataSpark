@@ -8,25 +8,51 @@ import java.io.{File, RandomAccessFile}
 import java.nio.charset.StandardCharsets
 import scala.collection.mutable.ListBuffer
 
-class IndexFile(rTreeID: Long) {
+class IndexFile(resetTree: Boolean, rTreeID: Long) {
 
   private val K: Int = UP_LIMIT / (16 * N + 4)
   private var BLOCK_CAPACITY: Int = 8 + K * (4 + 44 * N)
 
   private val INDEXFILE_PATH = s"indexfile_$rTreeID.txt"
-  resetIndexfile()
+  private val METADATA_PATH  = s"metadata_$rTreeID.txt"
+
+  private var metadata: Metadata = _
+  private val treeWasReset: Boolean = prepareTreeFiles()
   private val indexfile = new RandomAccessFile(INDEXFILE_PATH, "rw")
-  private val metadata: Metadata = new Metadata()
 
   private var IOs: Int = 0
 
-  // for testing
-  def this(CAPACITY: Int, testing: Boolean) = {
-    this(-1)
-    BLOCK_CAPACITY = CAPACITY
+
+// ---------------------------------------------------------------------------------------------------------------------
+  private def prepareTreeFiles(): Boolean = {
+    var resetTreeVar = resetTree
+    val indexfileFile = new File(INDEXFILE_PATH)
+    val metadataFile  = new File(METADATA_PATH)
+    if(resetTree || !indexfileFile.exists() || !metadataFile.exists()) {
+      resetTreeVar = true
+      resetFiles(indexfileFile, metadataFile)
+    }
+    if(resetTreeVar)
+      metadata = new Metadata()
+    else {
+      try {
+        metadata = MetadataLoader.loadFromFile(METADATA_PATH)
+      } catch {
+        case e: Exception =>
+          println(e.getMessage)
+          resetTreeVar = true
+          resetFiles(indexfileFile, metadataFile)
+          metadata = new Metadata()
+      }
+    }
+    resetTreeVar
   }
-
-
+  private def resetFiles(indexfileFile: File, metadataFile: File): Unit = {
+    indexfileFile.delete()
+    indexfileFile.createNewFile()
+    metadataFile.delete()
+    metadataFile.createNewFile()
+  }
 
 // Tree Metadata  ------------------------------------------------------------------------------------------------------
 
@@ -37,9 +63,10 @@ class IndexFile(rTreeID: Long) {
   }
 
   def getIOs: Int = IOs
+  def getTreeWasReset: Boolean = treeWasReset
   def getTreeMetadata: Metadata = metadata
-  def getTreeHeight: Int = metadata.getTreeHeight
   def getRootID: Int = metadata.getRootID
+  def getTreeHeight: Int = metadata.getTreeHeight
   def getNumOfNodes: Int = metadata.getNumOfNodes
   def getNumOfPoints: Int = metadata.getNumOfPoints
   def setNumOfPoints(numOfPoints: Int): Unit = metadata.setNumOfPoints(numOfPoints)
@@ -106,15 +133,10 @@ class IndexFile(rTreeID: Long) {
 
 // Random Access File  -------------------------------------------------------------------------------------------------
 
-
-  private def resetIndexfile() : Unit = {
-    val file = new File(INDEXFILE_PATH)
-    if (!file.exists() || file.delete())
-      file.createNewFile();
-  }
-
-  def closeFile(): Unit =
+  def closeFile(): Unit = {
     indexfile.close()
+    metadata.saveToFile(METADATA_PATH)
+  }
 
 
   /** Επιστρέφει το δείκτη του τέλους του αρχείου */
@@ -187,4 +209,11 @@ class IndexFile(rTreeID: Long) {
     ).to(ListBuffer)
   }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
+  // for testing
+  def this(CAPACITY: Int, testing: Boolean) = {
+    this(true, -1)
+    BLOCK_CAPACITY = CAPACITY
+  }
 }

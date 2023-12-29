@@ -1,8 +1,11 @@
 package FileHandler
 
+import Util.Constants.N
+
+import java.io.{FileInputStream, FileOutputStream, ObjectInputStream, ObjectOutputStream}
 import scala.collection.mutable
 
-class Metadata {
+class Metadata extends Serializable {
 
   private val nodeIndexer: mutable.HashMap[Int, (Long, Int)] = new mutable.HashMap[Int, (Long, Int)]()
   private var rootID = 1
@@ -29,4 +32,31 @@ class Metadata {
   def getNumOfPoints: Int = numOfPoints
   def setNumOfPoints(nPoints: Int): Unit = {numOfPoints = nPoints}
 
+
+  // Method to save Metadata object to a file
+  def saveToFile(filePath: String): Unit = {
+    val fileOutputStream = new FileOutputStream(filePath)
+    val objectOutputStream = new ObjectOutputStream(fileOutputStream)
+
+    objectOutputStream.writeObject(this)
+
+    objectOutputStream.close()
+    fileOutputStream.close()
+  }
+
+}
+
+object MetadataLoader {
+  // Method to load Metadata object from a file
+  def loadFromFile(filePath: String): Metadata = {
+    val fileInputStream = new FileInputStream(filePath)
+    val objectInputStream = new ObjectInputStream(fileInputStream)
+
+    val metadata = objectInputStream.readObject().asInstanceOf[Metadata]
+
+    objectInputStream.close()
+    fileInputStream.close()
+
+    metadata
+  }
 }

@@ -22,22 +22,23 @@ class SkylineBBS(indexFile: IndexFile, logger: Logger) {
 
 
   private def computeSkyline(): Unit = {
-    addToHeap(indexFile.retrieveNode(rootID))                                                                           ; logger.info(s"Skyline (${sky.length}) = \n ${sky.toString()} \nHeap (${heap.length}) =\n ${heap.toString()}")
+    addToHeap(indexFile.retrieveNode(rootID))
     while(heap.nonEmpty) {
       val (minEntry: GeometricObject, l1: Double) = heap.dequeue()                                                      ; logger.info(s"\nL1 = $l1 \t  ${minEntry.serialize}")
 
       minEntry match {
-        case p: Point     => sky += ((p, p.dominanceArea))
+        case p: Point     => sky += ((p, p.dominanceArea))                                                              ; logger.info(s"Add to skyline \t < ${p.serialize} > \t # skyline = ${sky.length}")
         case r: Rectangle => addToHeap(indexFile.retrieveNode(r.getChildID))
-      }                                                                                                                 ; logger.info(s"Skyline (${sky.length}) = \n ${sky.toString()} \nHeap (${heap.length}) =\n ${heap.toString()}")
+      }
     }/*end while not empty*/
   }
 
 
   private def addToHeap(node: TreeNode): Unit = {
     node.zipWithIndex.foreach{case (geoObj, entryIndex) =>
-      if(isDominant(entryIndex, geoObj, node))
-        heap.enqueue((geoObj, geoObj.L1))
+      if(isDominant(entryIndex, geoObj, node)) {
+        heap.enqueue((geoObj, geoObj.L1))                                                                               ; logger.info(s"\tAdd to heap \t < ${heap.head._2} : ${geoObj.serialize} > \t # heap = ${heap.length}")
+      }
     }
   }
 

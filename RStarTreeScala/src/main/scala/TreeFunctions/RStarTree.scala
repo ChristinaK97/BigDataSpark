@@ -14,12 +14,14 @@ class RStarTree(pointsPartition: Iterator[Point], nDims: Int) {
   N = nDims
   private var indexfile: IndexFile = _
   private val logger = new Logger()
+  private val resetTree = true
 
 
   def createTree(rTreeID: Long) : Unit = {
-    indexfile = new IndexFile(rTreeID)
-    new CreateTree(indexfile, pointsPartition, logger)
-    validateDataConsistency()
+    indexfile = new IndexFile(resetTree, rTreeID)
+    if(indexfile.getTreeWasReset)
+      new CreateTree(indexfile, pointsPartition, logger)
+    //validateDataConsistency()
   }
 
 /* Ερώτημα 1: Υπολογισμός skyline στο dataset ----------------------------------------------------------- */
