@@ -22,6 +22,10 @@ class Rectangle extends GeometricObject {
     this.pM = pM
   }
 
+  def this(pmCoordinates: Array[Double], pMCoordinates: Array[Double]) = {
+    this(new Point(pmCoordinates), new Point(pMCoordinates))
+  }
+
   def this(childptr: Int, pmCoordinates: Array[Double], pMCoordinates: Array[Double]) = {
     this(new Point(pmCoordinates), new Point(pMCoordinates))
     childPtr = childptr
@@ -113,6 +117,12 @@ class Rectangle extends GeometricObject {
   }
 
 
+  def contains(O: GeometricObject): Boolean = {
+    O match {
+      case point: Point => contains(point)
+      case rectangle: Rectangle => contains(rectangle)
+    }
+  }
 
 
 /*----------------------Expand Rectangle--------------------------------*/
@@ -204,6 +214,13 @@ class Rectangle extends GeometricObject {
 
 /* ----------------------Σχετικές θέσεις Rectangle και Point ----------------------------*/
 
+  /** Υπολογίζει την ελάχιστη L1 απόσταση του Rectangle από την αρχή των αξόνων ως
+   * L1 = Σ_(i in [0,N)) |pm.coordinates(i)|
+   */
+  override def L1: Double =
+    pm.L1
+
+
   /** Επιστρέφει true αν το σημείο P βρίσκεται εντός του rectangle
    * Αν το σημείο P βρίσκεται στην περιφέρεια του rectangle θεωρούμε
    * ότι δεν περιέχεται στο rectangle.
@@ -218,7 +235,7 @@ class Rectangle extends GeometricObject {
   }
 
 
-  /** Επιστρέφει την απόσταση του σημείου P από το rectangle
+  /** Επιστρέφει την L2 απόσταση του σημείου P από το rectangle
    * Αν το σημείο βρίσκεται μέσα στο rectangle, απόσταση 0.
    */
   override def distance(P: Point): Double = {
@@ -234,7 +251,7 @@ class Rectangle extends GeometricObject {
     Math.sqrt(dist)
   }
 
-  /** Υπολογίζει την απόσταση ενός σημείου από το κέντρο του rectangle
+  /** Υπολογίζει την L2 απόσταση ενός σημείου από το κέντρο του rectangle
    *
    * @param P : Ένα σημείο
    * @return : Την απόσταση του σημείου P από το σημείο κέντρο του rectangle
@@ -245,7 +262,7 @@ class Rectangle extends GeometricObject {
 
 /* -----------------------Σχετικές θέσεις  δυο  Rectangle------------------------------*/
 
-  /** Υπολογίζει την απόσταση του rectangle R από το κέντρο του (this) rectangle.
+  /** Υπολογίζει την L2 απόσταση του rectangle R από το κέντρο του (this) rectangle.
    *
    * @param R : Ένα rectangle
    * @return : Η απόσταση απόσταση του σημείου κέντρου του (this) rectangle από

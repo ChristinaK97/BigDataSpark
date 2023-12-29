@@ -35,6 +35,9 @@ object TreeFunctionsTest {
     val dataPath = "C:/Users/karal/progr/Scala/BigDataSpark/dist_generator/uniform.csv"
     val points: Iterable[Point] = readPointsFromCSV(dataPath)
     val nDims = points.head.nDims
-    new RStarTree(points.iterator, nDims).createTree(0)
+    val rTree = new RStarTree(points.iterator, nDims)
+    rTree.createTree(0)
+    rTree.computeDatasetSkyline(false)
+    rTree.close()
   }
 }

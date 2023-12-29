@@ -31,4 +31,15 @@ class LeafNode(nodeId: Int) extends TreeNode(nodeId, null) {
       _.getCoordinate(axis)
     )
 
+/* ---------------------------------- Dominance Queries ------------------------------------*/
+
+  def isDominantInNode(pIndex: Int): Boolean = {
+    val p: Point = getEntry(pIndex).asInstanceOf[Point]
+    this.zipWithIndex.foreach{case (q, qIndex) =>
+      if(pIndex != qIndex && q.asInstanceOf[Point].dominates(p))
+        return false
+    }
+    true
+  }
+
 }

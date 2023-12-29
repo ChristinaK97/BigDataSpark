@@ -27,9 +27,20 @@ class IndexFile(rTreeID: Long) {
   }
 
 
-  def updateMetadata(rootID: Int, treeHeight: Int) : Unit = {
 
+// Tree Metadata  ------------------------------------------------------------------------------------------------------
+
+  def getRootIdAndTreeHeight: (Int, Int) =
+    (metadata.getRootID, metadata.getTreeHeight)
+
+  def getTreeMetadata: Metadata = metadata
+
+  def updateMetadata(rootID: Int, treeHeight: Int) : Unit = {
+    metadata.setRootID(rootID)
+    metadata.setTreeHeight(treeHeight)
   }
+
+  def getIOs: Int = IOs
 
 // Write & Read  -------------------------------------------------------------------------------------------------------
 

@@ -43,7 +43,46 @@ class Point extends GeometricObject with Serializable {
     coordinates(dim) = value
 
 
-  /** Υπολογίζει την απόσταση μεταξύ δύο σημείων.
+  def dominanceArea: Rectangle = {
+    new Rectangle(
+      this.coordinates,
+      Array.fill[Double](N)(Double.MaxValue)
+    )
+  }
+
+  /**
+   * In order for p to dominate q, the following conditions need to be met:
+   *
+   * 1) For all dimensions: p must be better than or equal to q
+   * 2) In at least one dimension: p must be strictly better than q
+   *
+   * (better = minimum)
+   *
+   * If both conditions are satisfied, p dominates q.
+   * If any dimension fails the first condition or
+   * all dimensions satisfy the first condition but none satisfy the second condition,
+   * then p does not dominate q.
+   **/
+  def dominates(q: Point): Boolean = {
+    var foundStrictlyBetter = false
+    for(i <- 0 until N) {
+      if(this.coordinates(i) < q.coordinates(i))
+        foundStrictlyBetter = true
+      else if(this.coordinates(i) > q.coordinates(i))
+        return false
+    }
+    foundStrictlyBetter
+  }
+
+
+  /** Υπολογίζει την L1 απόσταση του σημείου από την αρχή των αξόνων ως
+   * L1 = Σ_(i in [0,N)) |coordinates(i)|
+   */
+  override def L1: Double =
+    coordinates.map(math.abs).sum
+
+
+  /** Υπολογίζει την L2 απόσταση μεταξύ δύο σημείων.
    *
    * @param P : Ένα άλλο σημείο
    * @return : Την απόσταση αυτό (this) του σημείου από το δοθέν σημείο P

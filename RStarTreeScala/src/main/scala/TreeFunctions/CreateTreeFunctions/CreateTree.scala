@@ -7,11 +7,7 @@ import Util.Logger
 
 import scala.collection.mutable
 
-class CreateTree(indexFile: IndexFile, logger_ : Logger) {
-
-  private val logger: Logger = logger_
-
-  private val indexfile: IndexFile = indexFile
+class CreateTree(indexfile: IndexFile, logger : Logger) {
 
   /* κόμβος ρίζα του δέντρου, όταν είναι ο μοναδικός κόμβος του δέντρου είναι φύλλο
   */ private var root: TreeNode = new LeafNode(1)
@@ -68,14 +64,14 @@ class CreateTree(indexFile: IndexFile, logger_ : Logger) {
   /** 1. Καλείται για να δημιουργήσει ένα νέο δέντρο από τις
    * εγγραφές που είναι αποθηκευμένες στο datafile.
    */
-  def this(indexFile: IndexFile, pointsPartition: Iterator[Point], logger_ : Logger) = {
-    this(indexFile, logger_)
+  def this(indexFile: IndexFile, pointsPartition: Iterator[Point], logger : Logger) = {
+    this(indexFile, logger)
     pointsPartition.foreach(point => {
       logger.info(s">> Point $counter : ${point.serialize}")
       toInsert += point
       insertFrom_toReInsert_toInsert()
     })
-    indexFile.writeNodeToFile(root)                                                                                     ; logger.info(s"tree height = $treeHeight\t # nodes = ${nextNodeID - 1}\t root node id [${root.getNodeID}] with childPtrs = ${if(!root.isLeaf) root.map(entry=> entry.asInstanceOf[Rectangle].getChildID) else root.isLeaf}")
+    indexFile.writeNodeToFile(root)                                                                                     ; logger.info(s"# IOs = ${indexFile.getIOs}\t tree height = $treeHeight\t # nodes = ${nextNodeID - 1}\t root node id [${root.getNodeID}] with childPtrs = ${if(!root.isLeaf) root.map(entry=> entry.asInstanceOf[Rectangle].getChildID) else root.isLeaf}")
     logger.close()
   }
 
