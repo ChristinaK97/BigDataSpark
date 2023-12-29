@@ -26,11 +26,16 @@ class CreateTree(indexFile: IndexFile, logger_ : Logger) {
   /*Το μονοπάτι node από την ρίζα μέχρι το φύλλο που θα ακολουθηθεί
 	* για την εισαγωγή μιας εγγραφής στο δέντρο
 	* TreeNode: ο επιλεγμένος κόμβος
-	* int: index του επιλεγμένου MBR στο entriesOnNode του node, -1 αν TreeNode είναι στο επίπεδο εισαγωγής
+	* int: index στο entriesOnNode
+	*   Για επίπεδα πάνω από το επίπεδο εισαγωγής: Το index του επιλεγμένου MBR στο entriesOnNode του node
+	*   Για το επίπεδο εισαγωγής: Το index στο entriesOnNode όπου θα μπει το νέο entry (entriesOnNode.length)
   */ private var path: mutable.Stack[(TreeNode, Int)] = _
 
-  /* Εγγραφές που θα εισαχθούν στο node
-  */ private val toInclude: mutable.Stack[GeometricObject] = mutable.Stack[GeometricObject]()
+  /* GeometricObject: Εγγραφή που θα εισαχθεί στο δέντρο
+   * Int: Το επίπεδο όπου πρέπει να εισαχθεί
+   *    πχ αν geoObj isa Point : επίπεδο εισαγωγής -> φύλλα level==treeHeight
+   *       αν geoObj isa Rectangle for ReInsert : επίπεδο εισαγωγής, το επίπεδο από όπου αφαιρέθηκε
+  */ private val toInclude: mutable.Stack[(GeometricObject, Int)] = mutable.Stack[(GeometricObject, Int)]()
 
   /* Ολες οι εγγραφές ενός μπλοκ του datafile
     * που πρέπει να εισαχθούν στο δέντρο.
@@ -70,111 +75,120 @@ class CreateTree(indexFile: IndexFile, logger_ : Logger) {
       toInsert += point
       insertFrom_toReInsert_toInsert()
     })
-    indexFile.writeNodeToFile(root)
+    indexFile.writeNodeToFile(root)                                                                                     ; logger.info(s"tree height = $treeHeight\t # nodes = ${nextNodeID - 1}\t root node id [${root.getNodeID}] with childPtrs = ${if(!root.isLeaf) root.map(entry=> entry.asInstanceOf[Rectangle].getChildID) else root.isLeaf}")
+    logger.close()
   }
 
 
   private def insertFrom_toReInsert_toInsert(): Unit = {
+    /* toReInsert:
+     *   1. Οι εγγραφές θα πρέπει να επανεισαχθούν στο επίπεδο από το οποίο βγήκαν
+     *        ώστε το δέντρο να είναι ζυγιασμένο (όλα τα φύλλα στο ίδιο επίπεδο)
+     *        2.  Αν κατα την διαδικασία επανεισαγωγής το ύψος του δέντρου μεγάλωσε κατα ένα
+     *    3. Επανεισηγαγε το πάνω στοιχείο της στοίβας toReInsert
+     *
+     * toInsert:
+     *    4. δεν δημιουργήθηκε νέα ρίζα σε αυτόν τον κύκλο εισαγωγής
+     *    5. δεν εκτελέστηκε επανεισαγωγή σε αυτόν τον κύκλο εισαγωγής
+     *    6. Εισηγαγε το πάνω στοιχείο της στοίβας toInsert
+     *       στα φύλλα αφού είναι point
+     *
+     * else:
+     *    7. δεν υπάρχουν άλλες εγγραφές για εισαγωγή σε αυτόν τον κύκλο, τελος
+     */
     var continue = true
     while(continue) {
 
       if( toReInsert.nonEmpty ){
-        logger.info(s"\ttoReInsert contains elements # ${toReInsert.length} \t (toInsert = ${toInsert.size}\t toInclude = ${toInclude.size})")
-        val (geoObj: GeometricObject, reInsertLevel: Int) = toReInsert.pop()
-        /* Οι εγγραφές θα πρέπει να επανεισαχθούν στο επίπεδο από το οποίο βγήκαν
-			   * ώστε το δέντρο να είναι ζυγιασμένο (όλα τα φύλλα στο ίδιο επίπεδο) */
-        val level = treeHeight + 1 - reInsertLevel - (if(NewRootMade) 1 else 0)  // Αν κατα την διαδικασία επανεισαγωγής το ύψος του δέντρου μεγάλωσε κατα ένα
-        // Επανεισηγαγε το πάνω στοιχείο της στοίβας toReInsert
-        toInclude.push(geoObj)
-        insertFrom_toInclude(level)
+        val (geoObj: GeometricObject, reInsertLevel: Int) = toReInsert.pop()     /*1*/                                  ; logger.info(s"\ttoReInsert contains elements # ${toReInsert.length} \t (toInsert = ${toInsert.size}\t toInclude = ${toInclude.size})")
+        val level = reInsertLevel + (if(NewRootMade) 1 else 0)  //2
+        toInclude.push((geoObj, level))  //3
+        insertFrom_toInclude()
       }
 
       else if( toInsert.nonEmpty ){
-        logger.info(s"\ttoInsert contains elements # ${toInsert.length} \t (toReInsert = ${toReInsert.size}\t toInclude = ${toInclude.size})")
-        counter += 1
-        // δεν δημιουργήθηκε νέα ρίζα σε αυτόν τον κύκλο εισαγωγής
-        NewRootMade = false
-        // δεν εκτελέστηκε επανεισαγωγή σε αυτόν τον κύκλο εισαγωγής
-        (1 until treeHeight+1).foreach(
+        counter += 1                                                                                                    ; logger.info(s"\ttoInsert contains elements # ${toInsert.length} \t (toReInsert = ${toReInsert.size}\t toInclude = ${toInclude.size})")
+        NewRootMade = false  //4
+        (1 until treeHeight+1).foreach(                //5
             level => reinsertOnLevel.put(level, false))
-
-        // Εισηγαγε το πάνω στοιχείο της στοίβας toInsert
-        toInclude += toInsert.pop()
-        insertFrom_toInclude(1)  //στα φύλλα αφού είναι point. Μετράει ανάποδα
+        toInclude.push((toInsert.pop(), treeHeight))  //6
+        insertFrom_toInclude()
       }
 
-      else {//δεν υπάρχουν άλλες εγγραφές για εισαγωγή σε αυτόν τον κύκλο, τελος
-        logger.info("\tNo more records. Return from insertPoint")
-        continue = false
+      else {//7
+        continue = false                                                                                                ; logger.info("\tNo more records. Return from insertPoint")
       }
-    }
+    }//end while
   }
 
 
 
-  private def insertFrom_toInclude(level: Int): Unit = {
-    while (toInclude.nonEmpty) {
+  private def insertFrom_toInclude(): Unit = {
+    /* 1. Φτιάχνει το μονοπάτι στοίβα path από την ρίζα μέχρι επίπεδο εισαγωγής του στοιχείου
+     * 2. Το node στο επίπεδο εισαγωγής
+     * 3. Εισηγαγε το στοιχείο στο δέντρο στο επιλεγμένο node.
+     *
+     * isFull:
+     *    4. Αν χρειάζεται επανεισαγωγή γύρνα πίσω για να την εκτελέσεις
+     *    5. Αλλίως αν έγινε split
+     *       6. Αν το split έγινε σε κόμβο όχι ρίζα
+     *          Αντικατέστησε το parent MBR του κόμβου που έγινε overflow με τα parent MBRs που προέκυψαν από το split
+     *          7. Σβήσε το parent MBR του κόμβου όπου έγινε split
+     *       8. Αλλίως αν διασπάστηκε η ρίζα του δέντρου
+     *          9. Φτιάξε νέα ρίζα
+     *          10. Βάλε στη νέα ρίζα τα MBRs από το split της παλιάς ρίζας
+     *
+     * adjustPath:
+     *    11. Γράψε τον κόμβο όπου έγινε η εισαγωγή του στοιχείου
+     *    12. Μέχρι να φτάσεις στη ρίζα
+     *        13. Ενημέρωσε το indexfile με τα στοιχεία του parent node μετά το expand του MBR του
+     */
+    while (toInclude.nonEmpty) {                                                                                        logger.info(s"\ttoInclude not empty (# = ${toInclude.size}) : ${toInclude.toString()}")
 
-      val geoObj: GeometricObject = toInclude.pop()
-      // Φτιάχνει το μονοπάτι στοίβα path από την ρίζα μέχρι επίπεδο εισαγωγής του στοιχείου
-      chooseSubtree(geoObj, level)
-      //Το node στο επίπεδο εισαγωγής
-      var (currentNode, entryIndex) = path.pop()
-      //Εισηγαγε το στοιχείο στο δέντρο στο επιλεγμένο node.
-      logger.info(s"\tgeoObject = ${geoObj.serialize} to be inserted to node [${currentNode.getNodeID}] (isLeaf ${currentNode.isLeaf}) at level = $level ...")
-      currentNode.addEntry(geoObj)
-      logger.info(s"\t\t#entries = ${currentNode.getNumberOfEntries} (${currentNode.getNBytes} bytes) \t\t toInclude.size = ${toInclude.size}")
+      var (geoObj, level) = toInclude.pop()
+      level += (if(NewRootMade) 1 else 0)
+      chooseSubtree(geoObj, level)  //1
+      var (currentNode, entryIndex) = path.pop()  /*2*/                                                                 ; logger.info(s"\tgeoObject = ${geoObj.serialize} to be inserted to node [${currentNode.getNodeID}] (isLeaf ${currentNode.isLeaf}) at level = $level ...")
+      currentNode.addEntry(geoObj)                /*3*/                                                                 ; logger.info(s"\t\t#entries = ${currentNode.getNumberOfEntries} (${currentNode.getNBytes} bytes)")
 
       /* Αν με την εισαγωγή ο κόμβος γέμισε -------------------------- */
       if (currentNode.isFull) {
         overflowTreatment(currentNode, path.size + 1)
-        //Αν χρειάζεται επανεισαγωγή γύρνα πίσω για να την εκτελέσεις
-        if (ReInsert)
+
+        if (ReInsert) //4
           return
 
-        //Αλλίως αν έγινε split
-        if (Split) {
-          //Αν το split έγινε σε κόμβο όχι ρίζα
-          if (path.nonEmpty) {
-            // Αντικατέστησε το parent MBR του κόμβου που έγινε overflow με τα parent MBRs που προέκυψαν από το split
+        if (Split) { //5
+          if (path.nonEmpty) { //6 - split non root
             val (currentNode, splitIndex) = path.pop()
-            currentNode.deleteEntry(splitIndex)        //Σβήσε το parent MBR του κόμβου όπου έγινε split
-            currentNode.addEntry(toInclude.pop())     // Add new parent mbr1
-            currentNode.addEntry(toInclude.pop())     // Add new parent mbr2
+            currentNode.deleteEntry(splitIndex)        //7
 
-          //Αλλίως αν διασπάστηκε η ρίζα του δέντρου
-          } else {
-            //Φτιάξε νέα ρίζα
+          } else { // 8 - split root
+            root = new NonLeafNode(nextNodeID)  //9
             NewRootMade = true
             treeHeight += 1
-            root = new NonLeafNode(nextNodeID)
             nextNodeID += 1
+            /*10*/                                                                                                        logger.info(s"\tAdd geoObject = ${toInclude.top._1} (level = ${toInclude.top._2}) to root")
+            root.addEntry(toInclude.pop()._1)                                                                           ; logger.info(s"\tAdd geoObject = ${toInclude.top._1} (level = ${toInclude.top._2}) to root")
+            root.addEntry(toInclude.pop()._1)
             indexfile.writeNodeToFile(root)
-            indexfile.updateMetadata(root.getNodeID, treeHeight)
-            //Βάλε στη νέα ρίζα τα MBRs από το split της παλιάς ρίζας
-            toInclude.popAll().foreach(geoObj => root.addEntry(geoObj))
-            logger.info(s"\tMake new root [${root.getNodeID}] with # entries = ${root.getNumberOfEntries}")
-            //Τέλος διαδικασίας εισαγωγής του στοιχείου
+            indexfile.updateMetadata(root.getNodeID, treeHeight)                                                        ; logger.info(s"\tMade new root [${root.getNodeID}] with # entries = ${root.getNumberOfEntries}")
           }
         } //end if Split
       } //end if currentNode.isFull ------------------------------------ */
 
       /* Αλλίως αν με την εισαγωγή ο κόμβος δεν γέμισε ----------------- */
       else { // ADJUST PATH
-        // Γράψε τον κόμβο όπου έγινε η εισαγωγή του στοιχείου
-        indexfile.writeNodeToFile(currentNode)
-        while (path.nonEmpty) {  //Μέχρι να φτάσεις στη ρίζα
-          val (parentNode, parentIndex) = path.pop()
-          // entryIndex != -1 => Κόμβος πιο ψηλά στο δέντρο.  Expand το MBR του γονέα για να συμπεριλάβει το expanded MBR του παιδιού
-          // entryIndex == -1 => Γονέας του κόμβου εισαγωγής. Expand το MBR του γονέα για να συμπεριλάβει το στοιχείο
-          if (entryIndex == -1)
-            entryIndex = currentNode.getNumberOfEntries - 1
+        indexfile.writeNodeToFile(currentNode)    /*11*/                                                                ; logger.info(s"\tAdjust path:\t${path.toString()}")
+        while (path.nonEmpty) {  //12
+          val (parentNode, parentIndex) = path.pop()                                                                    ; logger.info(s"\t\tAdjust parentNode [${parentNode.getNodeID}] parentIndex=$parentIndex : <${parentNode.getEntry(parentIndex)}> with new element at child node entry index = $entryIndex")
+
           parentNode.getEntry(parentIndex).asInstanceOf[Rectangle]
                     .expandRectangle(currentNode.getEntry(entryIndex))
           currentNode = parentNode
+          entryIndex = parentIndex
 
-          //Ενημέρωσε το indexfile με τα στοιχεία του parent node μετά το expand του MBR του
-          indexfile.writeNodeToFile(currentNode)
+          indexfile.writeNodeToFile(currentNode)  //13
         }
       }//end not full => adjust path
       /* ----------------------------------------------------------------*/
@@ -185,61 +199,51 @@ class CreateTree(indexFile: IndexFile, logger_ : Logger) {
 
 // -------------------------------------------------------------------------------------------------------
   /**  Δημιουργεί το μονοπάτι στοίβα path από την ρίζα έως το επίπεδο εισαγωγής
-   * όπου θα εισαχθεί η εγγραφή με γεωμετρικό στοιχείο O. Κάθε φορά επιλέγει τον κόμβο
+   * όπου θα εισαχθεί η εγγραφή με γεωμετρικό στοιχείο. Κάθε φορά επιλέγει τον κόμβο
    * που πρέπει να ακολουθήσει η εισαγωγή, αποθηκεύοντας για κάθε κόμβο το δείκτη στον πίνακα
    * entriesOnNode όπου βρίσκεται το MBR που επιλέχθηκε να συμπεριλάβει την εγγραφή.
    * Από εκεί κατεβαίνει στο παιδί του entry και κάνει το ίδιο μέχρι να φτάσει στο
-   * επίπεδο εισαγωγής. Εκεί απόθηκεύει τον κόμβο που επιλέχθηκε στο τέλος του μονοπατιού,
-   * με τιμή entryIndex = -1.
+   * επίπεδο εισαγωγής. Εκεί απόθηκεύει τον κόμβο που επιλέχθηκε στο τέλος του μονοπατιού
    *
-   * @param geoObj     Το γεωμετρικό στοιχείο της εγγραφής.
+   * @param geoObj: Το γεωμετρικό στοιχείο της εγγραφής.
    * @param level : Το επίπεδο εισαγωγής μετρώντας ανάποδα
    */
   private def chooseSubtree(geoObj: GeometricObject, level: Int): Unit = {
-    logger.info(s"\tChoose subtree for <${geoObj.serialize}> \t level = $level")
-    var levelVar = level
+    var levelVar = level                                                                                                ; logger.info(s"\tChoose subtree for <${geoObj.serialize}> \t level = $level  height = $treeHeight")
     path = mutable.Stack[(TreeNode, Int)]()
     var current = root  //ξεκίνα από τη ρίζα
 
-    if(treeHeight == 1) {    //Η ρίζα είναι ο μοναδικός κόμβος του δέντρου
-      logger.info(s"\t\tAdd in root [${root.getNodeID}] with # entries = ${root.getNumberOfEntries}")
-      path.push((root, -1))  //η εισαγωγή του νέου στοιχείου θα γίνει στη ρίζα
-    }
-    else {
-      //Μέχρι να φτάσεις στο επίπεδο εισαγωγής
-      while (levelVar < treeHeight) {
+    if(treeHeight > 1) {
+      while (levelVar > 1) {  //Μέχρι να φτάσεις στο επίπεδο εισαγωγής
         val chosenEntryIndex = current.asInstanceOf[NonLeafNode]
                       // == : τελευταίο επίπεδο πριν τα φύλλα (δείκτες παιδίων δείχνουν σε φύλλα)
                       .chosenEntry(geoObj, path.size == treeHeight-2)
 
-        path.push((current, chosenEntryIndex))
-        logger.info(s"\t\t> For l = $levelVar node [${current.getNodeID}] (isLeaf ${current.isLeaf}) with # entries = ${current.getNumberOfEntries}. Chosen entry index = $chosenEntryIndex")
+        path.push((current, chosenEntryIndex))                                                                          ; logger.info(s"\t\t> For l = $levelVar node [${current.getNodeID}] (isLeaf ${current.isLeaf}) with # entries = ${current.getNumberOfEntries}. Chosen entry index = $chosenEntryIndex")
         val childID = current.getEntry(chosenEntryIndex).asInstanceOf[Rectangle].getChildID
         //current <- current.load(current.getChild)
         current = indexfile.retrieveNode(childID)
-        levelVar += 1
+        levelVar -= 1
       }
-      logger.info(s"\t\t> For l = $levelVar node [${current.getNodeID}] (isLeaf ${current.isLeaf}) with # entries = ${current.getNumberOfEntries}")
-      //κόμβος στο επίπεδο εισαγωγής. εδώ θα εισαχθεί η εγγραφή
-      path.push((current, -1))
     }
+    //κόμβος στο επίπεδο εισαγωγής. εδώ θα εισαχθεί η εγγραφή
+    path.push((current, current.getNumberOfEntries))                                                                    ; logger.info(s"\t\t> For l = $levelVar node [${current.getNodeID}] (isLeaf ${current.isLeaf}) with # entries = ${current.getNumberOfEntries}")
   }
 
 // -------------------------------------------------------------------------------------------------------
   /**  Διαχειρίζεται το overflow
    * @param node  Ο κόμβος του δέντρου που έγινε overflow
    * @param level Το επίπεδο του δέντρου όπου βρίσκεται το node
-   *              (Μετρώντας κανονικά - leaf : level==treeHeight)
+   *              (root level == 1 , leaf level == treeHeight)
    */
   private def overflowTreatment(node: TreeNode, level: Int): Unit = {
     /* Αν το node είναι ρίζα ή έχει ξαναεκτελεστεί reinsert σε αυτό το επίπεδο
 		 * σε αυτόν τον κύκλο εισαγωγής, κάνε split τον κόμβο
 		 */
-    logger.info(s"Overflow treatment for node [${node.getNodeID}] at level = $level. isLeaf ${node.isLeaf}")
-    Split = node.getNodeID == root.getNodeID || reinsertOnLevel(level)
+    Split = node.getNodeID == root.getNodeID || reinsertOnLevel(level)                                                  ; logger.info(s"Overflow treatment for node [${node.getNodeID}] at level = $level. isLeaf ${node.isLeaf}")
     ReInsert = !Split
     if(Split)
-      split(node)
+      split(node, level)
     else{
       reinsertOnLevel.put(level, true)
       reinsert(node, level)
@@ -255,20 +259,21 @@ class CreateTree(indexFile: IndexFile, logger_ : Logger) {
    *    για να εισαχθούν στον κόμβο γονέα του node.
    *
    * @param node Ο κόμβος που έγινε overflow.
+   * @param level Το επίπεδο του δέντρου όπου βρίσκεται το node που θα διασπαστεί
+   *              (root level == 1 , leaf level == treeHeight)
+   *              Άρα τα νέα parent MBR θα πρέπει να εισαχθούν σε ένα επίπεδο πάνω από node1, node2
    */
-  private def split(node: TreeNode): Unit = {
+  private def split(node: TreeNode, level: Int): Unit = {
     //toInclude.clear()
-    logger.info(s"\tSplit node [${node.getNodeID}] with # entries = ${node.getNumberOfEntries}")
-    val nsp: NodeSplit = new NodeSplit(nextNodeID)
+    val nsp: NodeSplit = new NodeSplit(nextNodeID)                                                                      ; logger.info(s"\tSplit node [${node.getNodeID}] with # entries = ${node.getNumberOfEntries}")
     nextNodeID += 1
     val (mbr1: Rectangle, node1: TreeNode, mbr2: Rectangle, node2: TreeNode) = nsp.splitNode(node)
     mbr1.setChildID(node1.getNodeID)
     mbr2.setChildID(node2.getNodeID)
-    toInclude.push(mbr2)
-    toInclude.push(mbr1)
+    toInclude.push((mbr2, level - 1))
+    toInclude.push((mbr1, level - 1))
     indexfile.writeNodeToFile(node1)
-    indexfile.writeNodeToFile(node2)
-    logger.info(s"\t\t(nodeA [${node1.getNodeID}], #entries : ${node1.getNumberOfEntries}, MBRA = ${mbr1.serialize})\n\t\t(nodeB [${node2.getNodeID}], #entries : ${node2.getNumberOfEntries}, MBRB = ${mbr2.serialize})")
+    indexfile.writeNodeToFile(node2)                                                                                    ; logger.info(s"\t\t(nodeA [${node1.getNodeID}], #entries : ${node1.getNumberOfEntries} : ${if(!node1.isLeaf) node1.getEntries.map(entry => entry.asInstanceOf[Rectangle].getChildID)}\t, MBRA = ${mbr1.serialize})\n\t\t(nodeB [${node2.getNodeID}], #entries : ${node2.getNumberOfEntries} : ${if(!node2.isLeaf) node2.getEntries.map(entry => entry.asInstanceOf[Rectangle].getChildID)},\t MBRB = ${mbr2.serialize})")
   }
 
 
@@ -281,7 +286,7 @@ class CreateTree(indexFile: IndexFile, logger_ : Logger) {
    *  - Ενημέρωσε το indexfile
    *
    * @param node  : Ο κόμβος που έγινε overflow
-   * @param level : Το επίπεδο του δέντρου όπου βρίσκεται ο κόμβος μετρώντας κανονικά.
+   * @param level : Το επίπεδο του δέντρου όπου βρίσκεται ο κόμβος
    */
   private def reinsert(node: TreeNode, level: Int): Unit = {
     val (parent, entryIndex) = path.top

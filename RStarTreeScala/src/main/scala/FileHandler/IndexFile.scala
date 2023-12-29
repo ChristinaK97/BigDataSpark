@@ -60,7 +60,8 @@ class IndexFile(rTreeID: Long) {
     var (begin: Long, _: Int) = metadata.getBlockPos(node.getNodeID)
     val data = turnToBinary(node.serialize)
     val newSize = data.length
-    assert(newSize < BLOCK_CAPACITY, s"Node ${node.getNodeID}: Block size ${newSize} exceeded block capacity")
+    assert(newSize < BLOCK_CAPACITY, s"Node ${node.getNodeID}: Block size ${newSize} exceeded block capacity. " +
+      s"\n\tMAX # entries in non-leaf node = $K\t MAX block capacity = $BLOCK_CAPACITY")
 
     if(begin == -1) {
       begin = nextPos
