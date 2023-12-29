@@ -42,7 +42,7 @@ class RStarTree(pointsPartition: Iterator[Point], nDims: Int) {
 
   private def validateDataConsistency(): Unit = {
     val counter: Array[ListBuffer[Int]] = Array.fill[ListBuffer[Int]](indexfile.getNumOfPoints)(ListBuffer[Int]())
-    for(nodeID <- 1 until indexfile.getNumOfNodes) {
+    for(nodeID <- 1 until indexfile.getNumOfNodes+1) {
       val node: TreeNode = indexfile.retrieveNode(nodeID)
       if(node.isLeaf)
         node.foreach{case p: Point =>
