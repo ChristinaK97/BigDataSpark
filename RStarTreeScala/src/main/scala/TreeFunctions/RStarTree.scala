@@ -30,8 +30,15 @@ class RStarTree(pointsPartition: Iterator[Point], nDims: Int) {
   }
 
 /* ---------------------------------------------------------------------------------------------------------*/
-  def close(): Unit =
+  def close(): Unit = {
+    logger.close()
     indexfile.closeFile()
+  }
 
+/* ---------------------------------------------------------------------------------------------------------*/
+
+  def validateDataConsistency(): Unit = {
+
+  }
 
 }

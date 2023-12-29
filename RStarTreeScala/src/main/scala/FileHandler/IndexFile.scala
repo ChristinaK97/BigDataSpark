@@ -30,19 +30,19 @@ class IndexFile(rTreeID: Long) {
 
 // Tree Metadata  ------------------------------------------------------------------------------------------------------
 
-  def getRootIdAndTreeHeight: (Int, Int) =
-    (metadata.getRootID, metadata.getTreeHeight)
-
-  def getTreeMetadata: Metadata = metadata
-
-  def updateMetadata(rootID: Int, treeHeight: Int) : Unit = {
+  def updateMetadata(rootID: Int, treeHeight: Int, numOfNodes: Int) : Unit = {
     metadata.setRootID(rootID)
     metadata.setTreeHeight(treeHeight)
+    metadata.setNumOfNodes(numOfNodes)
   }
 
   def getIOs: Int = IOs
+  def getTreeMetadata: Metadata = metadata
+  def getTreeHeight: Int = metadata.getTreeHeight
+  def getRootID: Int = metadata.getRootID
+  def getNumOfNodes: Int = metadata.getNumOfNodes
 
-// Write & Read  -------------------------------------------------------------------------------------------------------
+  // Write & Read  -------------------------------------------------------------------------------------------------------
 
   /**
    * nodeInfo :
@@ -169,7 +169,9 @@ class IndexFile(rTreeID: Long) {
 
   private def deserializeLeafNodeEntries(serializedEntries: Array[Array[String]]): ListBuffer[Point] = {
     serializedEntries.map(serializedPoint =>
-        new Point(serializedPoint.map(_.toDouble))
+        new Point(
+          serializedPoint.head.toInt,
+          serializedPoint.drop(1).map(_.toDouble))
     ).to(ListBuffer)
   }
 

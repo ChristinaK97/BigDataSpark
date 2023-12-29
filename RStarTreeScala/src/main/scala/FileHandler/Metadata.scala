@@ -7,6 +7,7 @@ class Metadata {
   private val nodeIndexer: mutable.HashMap[Int, (Long, Int)] = new mutable.HashMap[Int, (Long, Int)]()
   private var rootID = 1
   private var treeHeight = 1
+  private var numOfNodes = 1
 
   def addBlock(nodeID: Int, begin: Long, size: Int): Unit =
     nodeIndexer.put(nodeID, (begin, size))
@@ -20,5 +21,8 @@ class Metadata {
 
   def getTreeHeight: Int = treeHeight
   def setTreeHeight(newHeight: Int): Unit = {treeHeight = newHeight}
+
+  def getNumOfNodes: Int = numOfNodes
+  def setNumOfNodes(newNumOfNodes: Int): Unit = {numOfNodes = newNumOfNodes}
 
 }

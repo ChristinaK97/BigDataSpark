@@ -72,7 +72,7 @@ class CreateTree(indexfile: IndexFile, logger : Logger) {
       insertFrom_toReInsert_toInsert()
     })
     indexFile.writeNodeToFile(root)                                                                                     ; logger.info(s"# IOs = ${indexFile.getIOs}\t tree height = $treeHeight\t # nodes = ${nextNodeID - 1}\t root node id [${root.getNodeID}] with childPtrs = ${if(!root.isLeaf) root.map(entry=> entry.asInstanceOf[Rectangle].getChildID) else root.isLeaf}")
-    logger.close()
+    indexfile.updateMetadata(root.getNodeID, treeHeight, nextNodeID-1)
   }
 
 
@@ -168,7 +168,7 @@ class CreateTree(indexfile: IndexFile, logger : Logger) {
             root.addEntry(toInclude.pop()._1)                                                                           ; logger.info(s"\tAdd geoObject = ${toInclude.top._1} (level = ${toInclude.top._2}) to root")
             root.addEntry(toInclude.pop()._1)
             indexfile.writeNodeToFile(root)
-            indexfile.updateMetadata(root.getNodeID, treeHeight)                                                        ; logger.info(s"\tMade new root [${root.getNodeID}] with # entries = ${root.getNumberOfEntries}")
+            indexfile.updateMetadata(root.getNodeID, treeHeight, nextNodeID-1)                                                        ; logger.info(s"\tMade new root [${root.getNodeID}] with # entries = ${root.getNumberOfEntries}")
           }
         } //end if Split
       } //end if currentNode.isFull ------------------------------------ */

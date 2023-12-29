@@ -1,9 +1,10 @@
 package Geometry
 
-import Util.Constants.{N, sizeOfDouble}
+import Util.Constants.{N, sizeOfDouble, sizeOfInt}
 
 class Point extends GeometricObject with Serializable {
 
+  private var pointID: Int = -1
   private var coordinates: Array[Double] = _ // Declaring coordinates as a mutable empty array
 
   /** Constructor to initialize coordinates with an array of length N */
@@ -18,17 +19,22 @@ class Point extends GeometricObject with Serializable {
     this.coordinates = coordinates
   }
 
+  def this(pointId: Int, coordinates: Array[Double]) = {
+    this(coordinates)
+    pointID = pointId
+  }
+
   /** @return Επιστρέφει ένα αντίγραφο του αντικειμένου */
   def makeCopy: Point =
-    new Point(coordinates.clone())
+    new Point(pointID, coordinates.clone())
 
 
   /** The number of dimensions */
   def nDims: Int =
     coordinates.length
 
-  /** N dims * sizeof(double) */
-  override def getMemorySize: Int = N * sizeOfDouble
+  /** N dims * sizeof(double) + sizeOfInt */
+  override def getMemorySize: Int = N * sizeOfDouble + sizeOfInt
 
   def getCoordinates: Array[Double] =
     coordinates
@@ -96,6 +102,8 @@ class Point extends GeometricObject with Serializable {
 
   override def serialize: String = {
     val sb = new StringBuilder()
+    if(pointID != -1)
+      sb.append(s"$pointID,")
     coordinates.zipWithIndex.foreach { case (coordinate, dim) =>
       sb.append(coordinate)
       if(dim < N-1)

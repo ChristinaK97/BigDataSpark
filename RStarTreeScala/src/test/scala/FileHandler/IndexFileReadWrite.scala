@@ -26,8 +26,8 @@ object IndexFileReadWrite {
 
   // write -------------------------------------------------------------------------------------------------------------
   def test_write_leaf_node(indexFile: IndexFile):Unit = {
-    val leafP1 = new Point(Array(2.3, -5))
-    val leafP2 = new Point(Array(-0.889, 0.125))
+    val leafP1 = new Point(0, Array(2.3, -5))
+    val leafP2 = new Point(1, Array(-0.889, 0.125))
     val leaf = new LeafNode(2, ListBuffer(leafP1, leafP2))
 
     indexFile.writeNodeToFile(leaf)
@@ -51,8 +51,8 @@ object IndexFileReadWrite {
   }
 
   def test_write_new_leaf_node(indexFile: IndexFile): Unit = {
-    val leafP1 = new Point(Array(6.1, 3.2))
-    val leafP2 = new Point(Array(-0.8, 0.5))
+    val leafP1 = new Point(3, Array(6.1, 3.2))
+    val leafP2 = new Point(4, Array(-0.8, 0.5))
     val leaf = new LeafNode(3, ListBuffer(leafP1, leafP2))
 
     indexFile.writeNodeToFile(leaf)

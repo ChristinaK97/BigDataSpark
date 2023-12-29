@@ -15,7 +15,7 @@ object TreeFunctionsTest {
     var line: String = null
     var isFirstLine = true
     var headers: Array[String] = Array.empty[String]
-
+    var pointID: Int = 0
     while ( {line = bufferedReader.readLine(); line != null}) {
       if (isFirstLine) {
         headers = line.split(",").map(_.trim)
@@ -23,7 +23,8 @@ object TreeFunctionsTest {
       } else {
         val coordinates:Array[Double] = line.split(",").map(_.trim)
           .map(_.toDouble)
-        points += new Point(coordinates)
+        points += new Point(pointID, coordinates)
+        pointID += 1
       }
     }
     bufferedReader.close()

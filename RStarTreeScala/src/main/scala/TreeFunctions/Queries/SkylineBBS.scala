@@ -10,25 +10,26 @@ import scala.collection.mutable.ListBuffer
 
 class SkylineBBS(indexFile: IndexFile, logger: Logger) {
 
-  private val (rootID: Int, _) = indexFile.getRootIdAndTreeHeight
+  private val rootID = indexFile.getRootID
   private val sky : ListBuffer[(Point, Rectangle)] = ListBuffer[(Point, Rectangle)]()
   private val heap = mutable.PriorityQueue.empty[(GeometricObject, Double)](
                 Ordering.by[(GeometricObject, Double), Double](_._2).reverse)
 
   logger.info("-"*100 + "\nCompute Skyline\n" + "-"*100)
   computeSkyline()
+  logger.info(toString)
 
 
 
   private def computeSkyline(): Unit = {
-    addToHeap(indexFile.retrieveNode(rootID))                                                                           
+    addToHeap(indexFile.retrieveNode(rootID))                                                                           ; logger.info(s"Skyline (${sky.length}) = \n ${sky.toString()} \nHeap (${heap.length}) =\n ${heap.toString()}")
     while(heap.nonEmpty) {
-      val (minEntry: GeometricObject, l1: Double) = heap.dequeue()
+      val (minEntry: GeometricObject, l1: Double) = heap.dequeue()                                                      ; logger.info(s"\nL1 = $l1 \t  ${minEntry.serialize}")
 
       minEntry match {
         case p: Point     => sky += ((p, p.dominanceArea))
         case r: Rectangle => addToHeap(indexFile.retrieveNode(r.getChildID))
-      }
+      }                                                                                                                 ; logger.info(s"Skyline (${sky.length}) = \n ${sky.toString()} \nHeap (${heap.length}) =\n ${heap.toString()}")
     }/*end while not empty*/
   }
 
@@ -65,5 +66,13 @@ class SkylineBBS(indexFile: IndexFile, logger: Logger) {
 
 
 
-
+  override def toString: String = {
+    val sb: StringBuilder = new StringBuilder()
+    sb.append(s"\nSkyline Results :\n\t# points = ${sky.length}\n\t")
+    sky.foreach{case (p, domArea) =>
+      sb.append(p.serialize) //.append(s"\t\tDomArea = ${domArea.serialize}")
+      sb.append("\n\t")
+    }
+    sb.toString()
+  }
 }

@@ -6,6 +6,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 object Main {
 
   private def readPointsRDD(sc: SparkContext, dataPath: String): (RDD[Point], Int) = {
+    // TODO: add ids to points
     val pointsRDD = sc.textFile(dataPath)
       .mapPartitionsWithIndex {
         (idx, iter) => if (idx == 0) iter.drop(1) else iter}
