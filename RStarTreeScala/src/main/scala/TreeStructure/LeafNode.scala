@@ -33,6 +33,15 @@ class LeafNode(nodeId: Int) extends TreeNode(nodeId, null) {
 
 /* ---------------------------------- Dominance Queries ------------------------------------*/
 
+  /** Αν το geoObj isa Point από ένα leaf node, δεν κυριαρχείται
+   * από κανένα άλλο σημείο μέσα στο node, αν
+   *   - εξίσου καλό σε όλες τις διαστάσεις και
+   *   - καλύτερο σε τουλάχιστον μία.
+   * Πρέπει να ικανοποιεί αυτή τη σχέση με κάθε άλλο σημείο που ανήκει στο node.
+   *
+   * @param pIndex: Η θέση του σημείου που εξετάζεται μέσα στο entriesInNode
+   * @return true αν το σημείο δεν κυριαρχείται από κανένα άλλο σημείου του leaf node.
+   */
   def isDominantInNode(pIndex: Int): Boolean = {
     val p: Point = getEntry(pIndex).asInstanceOf[Point]
     this.zipWithIndex.foreach{case (q, qIndex) =>

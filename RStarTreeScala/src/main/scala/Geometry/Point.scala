@@ -50,6 +50,7 @@ class Point extends GeometricObject with Serializable {
     coordinates(dim) = value
 
 
+  /** @return Η περιοχή κυριαρχίας του σημείο P είναι ένα ορθωγώνιο με pm= P, pM= [Double.MAX]  */
   def dominanceArea: Rectangle = {
     new Rectangle(
       this.coordinates,
