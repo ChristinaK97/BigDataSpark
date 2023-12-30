@@ -37,7 +37,7 @@ class SkylineBBS(indexFile: IndexFile, logger: Logger) {
   private def addToHeap(node: TreeNode): Unit = {
     node.zipWithIndex.foreach{case (geoObj, entryIndex) =>
       if(isDominant(entryIndex, geoObj, node)) {
-        heap.enqueue((geoObj, geoObj.L1))                                                                               ; logger.info(s"\tAdd to heap \t < ${heap.head._2} : ${geoObj.serialize} > \t # heap = ${heap.length}")
+        heap.enqueue((geoObj, geoObj.L1))                                                                               ; logger.info(s"\tAdd to heap \t < ${geoObj.L1} : ${geoObj.serialize} > \t # heap = ${heap.length}")
       }
     }
   }

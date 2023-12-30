@@ -34,6 +34,9 @@ abstract class TreeNode(nodeId: Int, entries: ListBuffer[GeometricObject]) exten
     }
   }
 
+  def updateEntry(index: Int, updatedEntry: GeometricObject): Unit  =
+    entriesOnNode(index) = updatedEntry
+
 
   def getEntries: ListBuffer[GeometricObject] =
     entriesOnNode
@@ -51,8 +54,6 @@ abstract class TreeNode(nodeId: Int, entries: ListBuffer[GeometricObject]) exten
   def deleteEntry(splitIndex: Int): Unit =
     entriesOnNode.remove(splitIndex)
 
-  def deleteEntry(node: GeometricObject): Unit =
-    entriesOnNode -= node
 
   def getNBytes: Int = NBytesInNode
 

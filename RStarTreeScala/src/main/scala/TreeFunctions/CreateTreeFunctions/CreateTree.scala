@@ -67,7 +67,7 @@ class CreateTree(indexfile: IndexFile, logger : Logger) {
   def this(indexFile: IndexFile, pointsPartition: Iterator[Point], logger : Logger) = {
     this(indexFile, logger)
     pointsPartition.foreach(point => {
-      logger.info(s">> Point $counter : ${point.serialize}")
+      logger.info(s"\n>> Point $counter : ${point.serialize}")
       toInsert += point
       insertFrom_toReInsert_toInsert()
     })
@@ -97,14 +97,14 @@ class CreateTree(indexfile: IndexFile, logger : Logger) {
     while(continue) {
 
       if( toReInsert.nonEmpty ){
-        val (geoObj: GeometricObject, reInsertLevel: Int) = toReInsert.pop()     /*1*/                                  ; logger.info(s"\ttoReInsert contains elements # ${toReInsert.length} \t (toInsert = ${toInsert.size}\t toInclude = ${toInclude.size})")
+        val (geoObj: GeometricObject, reInsertLevel: Int) = toReInsert.pop()     /*1*/                                  ; logger.info(s"\n\ttoReInsert contains elements # ${toReInsert.length} \t (toInsert = ${toInsert.size}\t toInclude = ${toInclude.size})")
         val level = reInsertLevel + (if(NewRootMade) 1 else 0)  //2
         toInclude.push((geoObj, level))  //3
         insertFrom_toInclude()
       }
 
       else if( toInsert.nonEmpty ){
-        counter += 1                                                                                                    ; logger.info(s"\ttoInsert contains elements # ${toInsert.length} \t (toReInsert = ${toReInsert.size}\t toInclude = ${toInclude.size})")
+        counter += 1                                                                                                    ; logger.info(s"\n\ttoInsert contains elements # ${toInsert.length} \t (toReInsert = ${toReInsert.size}\t toInclude = ${toInclude.size})")
         NewRootMade = false  //4
         (1 until treeHeight+1).foreach(                //5
             level => reinsertOnLevel.put(level, false))
@@ -140,7 +140,7 @@ class CreateTree(indexfile: IndexFile, logger : Logger) {
      *    12. Μέχρι να φτάσεις στη ρίζα
      *        13. Ενημέρωσε το indexfile με τα στοιχεία του parent node μετά το expand του MBR του
      */
-    while (toInclude.nonEmpty) {                                                                                        logger.info(s"\ttoInclude not empty (# = ${toInclude.size}) : ${toInclude.toString()}")
+    while (toInclude.nonEmpty) {                                                                                        logger.info(s"\n\ttoInclude not empty (# = ${toInclude.size}) : ${toInclude.toString()}")
 
       var (geoObj, level) = toInclude.pop()
       level += (if(NewRootMade) 1 else 0)
@@ -157,8 +157,9 @@ class CreateTree(indexfile: IndexFile, logger : Logger) {
 
         if (Split) { //5
           if (path.nonEmpty) { //6 - split non root
-            val (currentNode, splitIndex) = path.pop()
+            val (currentNode, splitIndex) = path.pop()                                                                  ; logger.info(s"\t\tNon root splitted. Delete entry $splitIndex from current node ${currentNode.serialize}")
             currentNode.deleteEntry(splitIndex)        //7
+            indexfile.writeNodeToFile(currentNode)                                                                      ; logger.info(s"\t\tAfter delete : ${currentNode.serialize}")
 
           } else { // 8 - split root
             root = new NonLeafNode(nextNodeID)  //9
@@ -169,7 +170,7 @@ class CreateTree(indexfile: IndexFile, logger : Logger) {
             root.addEntry(toInclude.pop()._1)                                                                           ; logger.info(s"\tAdd geoObject = ${toInclude.top._1} (level = ${toInclude.top._2}) to root")
             root.addEntry(toInclude.pop()._1)
             indexfile.writeNodeToFile(root)
-            indexfile.updateMetadata(root.getNodeID, treeHeight, nextNodeID-1)                                                        ; logger.info(s"\tMade new root [${root.getNodeID}] with # entries = ${root.getNumberOfEntries}")
+            indexfile.updateMetadata(root.getNodeID, treeHeight, nextNodeID-1)                                          ; logger.info(s"\tMade new root [${root.getNodeID}] with # entries = ${root.getNumberOfEntries}")
           }
         } //end if Split
       } //end if currentNode.isFull ------------------------------------ */
@@ -261,14 +262,13 @@ class CreateTree(indexfile: IndexFile, logger : Logger) {
    *              Άρα τα νέα parent MBR θα πρέπει να εισαχθούν σε ένα επίπεδο πάνω από node1, node2
    */
   private def split(node: TreeNode, level: Int): Unit = {
-    //toInclude.clear()
-    val nsp: NodeSplit = new NodeSplit(nextNodeID)                                                                      ; logger.info(s"\tSplit node [${node.getNodeID}] with # entries = ${node.getNumberOfEntries}")
+    val nsp: NodeSplit = new NodeSplit(nextNodeID)                                                                      ; logger.info(s"\tSplit node [${node.getNodeID}] with # entries = ${node.getNumberOfEntries}. Is root? ${node.getNodeID == root.getNodeID}")
     nextNodeID += 1
     val (mbr1: Rectangle, node1: TreeNode, mbr2: Rectangle, node2: TreeNode) = nsp.splitNode(node)
     mbr1.setChildID(node1.getNodeID)
     mbr2.setChildID(node2.getNodeID)
-    toInclude.push((mbr2, level - 1))
     toInclude.push((mbr1, level - 1))
+    toInclude.push((mbr2, level - 1))
     indexfile.writeNodeToFile(node1)
     indexfile.writeNodeToFile(node2)                                                                                    ; logger.info(s"\t\t(nodeA [${node1.getNodeID}], #entries : ${node1.getNumberOfEntries} : ${if(!node1.isLeaf) node1.getEntries.map(entry => entry.asInstanceOf[Rectangle].getChildID)}\t, MBRA = ${mbr1.serialize})\n\t\t(nodeB [${node2.getNodeID}], #entries : ${node2.getNumberOfEntries} : ${if(!node2.isLeaf) node2.getEntries.map(entry => entry.asInstanceOf[Rectangle].getChildID)},\t MBRB = ${mbr2.serialize})")
   }
@@ -286,15 +286,33 @@ class CreateTree(indexfile: IndexFile, logger : Logger) {
    * @param level : Το επίπεδο του δέντρου όπου βρίσκεται ο κόμβος
    */
   private def reinsert(node: TreeNode, level: Int): Unit = {
-    val (parent, entryIndex) = path.top
-    val ri = new ReInsert(node)
-    toReInsert = ri.makeToReInsert(parent.getEntry(entryIndex).asInstanceOf[Rectangle], level)
-    ri.updateNode()
-    ri.shrinkParent()
-    indexfile.writeNodeToFile(node)
+    val (parent: TreeNode, entryIndex: Int) = path.top
+
+    val (updatedNode: TreeNode, updatedParentMBR: Rectangle, entriesToReInsert) =
+      new ReInsert(node,                                                  // overflown node
+                   parent.getEntry(entryIndex).asInstanceOf[Rectangle],   // parent MBR
+                   level).run()                                           // reinsert level
+    toReInsert = entriesToReInsert
+    parent.updateEntry(entryIndex, updatedParentMBR)
+    indexfile.writeNodeToFile(updatedNode)
     indexfile.writeNodeToFile(parent)
   }
 
+
+
+  /*
+  def checkForDuplicates(node: TreeNode): Unit = {
+    if (node.isInstanceOf[NonLeafNode]) {
+      val c = mutable.HashMap[Int, Int]()
+      node.foreach { r =>
+        if (c.contains(r.asInstanceOf[Rectangle].getChildID)) {
+          val nodeId = node.getNodeID
+        } else
+          c.put(r.asInstanceOf[Rectangle].getChildID, 1)
+      }
+    }
+  }
+   */
 
 
 }

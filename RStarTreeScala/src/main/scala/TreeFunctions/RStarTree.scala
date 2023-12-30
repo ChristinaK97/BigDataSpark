@@ -21,7 +21,7 @@ class RStarTree(pointsPartition: Iterator[Point], nDims: Int) {
     indexfile = new IndexFile(resetTree, rTreeID)
     if(indexfile.getTreeWasReset)
       new CreateTree(indexfile, pointsPartition, logger)
-    //validateDataConsistency()
+    validateDataConsistency()
   }
 
 /* Ερώτημα 1: Υπολογισμός skyline στο dataset ----------------------------------------------------------- */
