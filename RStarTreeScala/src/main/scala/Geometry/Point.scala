@@ -117,5 +117,20 @@ class Point extends GeometricObject with Serializable {
   override def toString: String =
     serialize
 
+
+  override def getCount: Int = 1
+
+
+
+// ---------------------------------------------------------------------------
+
+  // not implemented for point
+  override def setCount(newCount: Int): Unit = ???
+  override def increaseCount(value: Int): Unit = ???
+  override def decreaseCount(value: Int): Unit = ???
+  override def increaseCount(geoObj: GeometricObject): Unit = ???
+  override def decreaseCount(geoObj: GeometricObject): Unit = ???
+  override def expandRectangle(geoObj: GeometricObject): Rectangle = ???
+
 }
 

@@ -9,6 +9,7 @@ abstract class TreeNode(nodeId: Int, entries: ListBuffer[GeometricObject]) exten
 
   private val nodeID: Int = nodeId
   private var NBytesInNode: Int = _
+  private var SCount: Int = 0
   private var entriesOnNode: ListBuffer[GeometricObject] = _
   setEntries(entries)
 
@@ -62,11 +63,13 @@ abstract class TreeNode(nodeId: Int, entries: ListBuffer[GeometricObject]) exten
 
   def isLeaf: Boolean
 
+
  def serialize: String = {
    val sb: StringBuilder = new StringBuilder()
 
    sb.append(nodeID).append("|")
      .append(if(isLeaf) "1" else "0").append("|")
+     .append(SCount).append("|")
 
    this.zipWithIndex.foreach{ case (entry, index) =>
      sb.append(entry.serialize)
@@ -78,6 +81,16 @@ abstract class TreeNode(nodeId: Int, entries: ListBuffer[GeometricObject]) exten
 
   override def toString: String =
     serialize
+
+
+
+  /* ----------------------- Node Count Aggregation  ------------------------------*/
+  def getSCount: Int = SCount
+  def setSCount(newCount: Int): Unit = SCount = newCount
+  def increaseSCount(value: Int): Unit = SCount += value
+  def increaseSCount(geoObj: GeometricObject): Unit = increaseSCount(geoObj.getCount)
+  def decreaseSCount(value: Int): Unit = SCount -= value
+  def decreaseSCount(geoObj: GeometricObject): Unit = decreaseSCount(geoObj.getCount)
 
 
 }

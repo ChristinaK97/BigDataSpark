@@ -11,7 +11,7 @@ import scala.collection.mutable.ListBuffer
 class IndexFile(resetTree: Boolean, rTreeID: Long) {
 
   private val K: Int = UP_LIMIT / (16 * N + 4)
-  private var BLOCK_CAPACITY: Int = 8 + K * (4 + 44 * N)
+  private var BLOCK_CAPACITY: Int = 8 + 7 + K * (7 + 4 + 44 * N)
 
   private val INDEXFILE_PATH = s"indexfile_$rTreeID.txt"
   private val METADATA_PATH  = s"metadata_$rTreeID.txt"
@@ -179,16 +179,17 @@ class IndexFile(resetTree: Boolean, rTreeID: Long) {
     deserializeTreeNode(
       nodeData(0).toInt,       //nodeID
       nodeData(1).equals("1"), //isLeaf
-      nodeData.drop(2).map(serializedEntry => serializedEntry.split(",")),
+      nodeData(2).toInt,       //SCount
+      nodeData.drop(3).map(serializedEntry => serializedEntry.split(",")),
     )
 
   }
 
-  private def deserializeTreeNode(nodeID: Int, isLeaf: Boolean, serializedEntries: Array[Array[String]]): TreeNode = {
+  private def deserializeTreeNode(nodeID: Int, isLeaf: Boolean, SCount: Int, serializedEntries: Array[Array[String]]): TreeNode = {
     if(isLeaf)
-      new LeafNode(nodeID, deserializeLeafNodeEntries(serializedEntries))
+      new LeafNode(nodeID, SCount, deserializeLeafNodeEntries(serializedEntries))
     else
-      new NonLeafNode(nodeID, deserializeNonLeafNodeEntries(serializedEntries))
+      new NonLeafNode(nodeID, SCount, deserializeNonLeafNodeEntries(serializedEntries))
   }
 
   private def deserializeLeafNodeEntries(serializedEntries: Array[Array[String]]): ListBuffer[Point] = {
@@ -203,8 +204,9 @@ class IndexFile(resetTree: Boolean, rTreeID: Long) {
     serializedEntries.map(serializedRectangle =>
       new Rectangle(
         serializedRectangle(0).toInt,
-        serializedRectangle.slice(1,N+1).map(_.toDouble),
-        serializedRectangle.drop(N+1).map(_.toDouble)
+        serializedRectangle(1).toInt,
+        serializedRectangle.slice(2,N+2).map(_.toDouble),
+        serializedRectangle.drop(N+2).map(_.toDouble)
       )
     ).to(ListBuffer)
   }

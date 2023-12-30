@@ -28,24 +28,24 @@ object IndexFileReadWrite {
   def test_write_leaf_node(indexFile: IndexFile):Unit = {
     val leafP1 = new Point(0, Array(2.3, -5))
     val leafP2 = new Point(1, Array(-0.889, 0.125))
-    val leaf = new LeafNode(2, ListBuffer(leafP1, leafP2))
+    val leaf = new LeafNode(2, 10, ListBuffer(leafP1, leafP2))
 
     indexFile.writeNodeToFile(leaf)
   }
 
   def test_write_non_leaf_node(indexFile: IndexFile):Unit = {
-    val rootR1 = new Rectangle(2, Array(2.3, -5), Array(0.8, -3.4))
-    val rootR2 = new Rectangle(3, Array(0.3, 4), Array(-0.889, 0.125))
-    val root = new NonLeafNode(1, ListBuffer(rootR1, rootR2))
+    val rootR1 = new Rectangle(2, 3, Array(2.3, -5), Array(0.8, -3.4))
+    val rootR2 = new Rectangle(3, 7, Array(0.3, 4), Array(-0.889, 0.125))
+    val root = new NonLeafNode(1, 20, ListBuffer(rootR1, rootR2))
 
     indexFile.writeNodeToFile(root)
   }
 
   def test_update_non_leaf_node(indexFile: IndexFile): Unit = {
-    val rootR1 = new Rectangle(2, Array(2.3, -5), Array(0.8, -3.4))
-    val rootR2 = new Rectangle(3, Array(0.3, 4), Array(-0.889, 0.125))
-    val rootR3 = new Rectangle(4, Array(6.1, 3.2), Array(-0.8, 1.25))
-    val root = new NonLeafNode(1, ListBuffer(rootR1, rootR2, rootR3))
+    val rootR1 = new Rectangle(2, 1, Array(2.3, -5), Array(0.8, -3.4))
+    val rootR2 = new Rectangle(3, 5, Array(0.3, 4), Array(-0.889, 0.125))
+    val rootR3 = new Rectangle(4, 3, Array(6.1, 3.2), Array(-0.8, 1.25))
+    val root = new NonLeafNode(1, 30, ListBuffer(rootR1, rootR2, rootR3))
 
     indexFile.writeNodeToFile(root)
   }
@@ -53,7 +53,7 @@ object IndexFileReadWrite {
   def test_write_new_leaf_node(indexFile: IndexFile): Unit = {
     val leafP1 = new Point(3, Array(6.1, 3.2))
     val leafP2 = new Point(4, Array(-0.8, 0.5))
-    val leaf = new LeafNode(3, ListBuffer(leafP1, leafP2))
+    val leaf = new LeafNode(3, 17, ListBuffer(leafP1, leafP2))
 
     indexFile.writeNodeToFile(leaf)
   }
@@ -73,6 +73,7 @@ object IndexFileReadWrite {
     println(nonLeaf.serialize)
     nonLeaf.foreach(rectangle =>
       println(s"${rectangle.serialize} -> \t" +
+        s"count= ${rectangle.asInstanceOf[Rectangle].getCount} " +
         s"child= ${rectangle.asInstanceOf[Rectangle].getChildID} " +
         s"pm= ${rectangle.asInstanceOf[Rectangle].get_pm.serialize} " +
         s"pM= ${rectangle.asInstanceOf[Rectangle].get_pM.serialize} "))

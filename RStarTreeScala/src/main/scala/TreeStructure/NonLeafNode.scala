@@ -12,6 +12,11 @@ class NonLeafNode(nodeId: Int) extends TreeNode(nodeId, null) {
     setEntries(entries.asInstanceOf[ListBuffer[GeometricObject]])
   }
 
+  def this(nodeId: Int, SCount: Int, entries: ListBuffer[Rectangle]) = {
+    this(nodeId, entries)
+    setSCount(SCount)
+  }
+
   override def isLeaf: Boolean = false
 
   /** @param index : Η θέση του entriesOnNode
@@ -182,6 +187,8 @@ class NonLeafNode(nodeId: Int) extends TreeNode(nodeId, null) {
       selectedPoint.getCoordinate(axis)
     }
   }
+
+/* -----------------------------------------------------------------------------------------*/
 
 
 }

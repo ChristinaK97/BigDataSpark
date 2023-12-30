@@ -7,6 +7,7 @@ class Rectangle extends GeometricObject {
   private var pm: Point = _     //bottom left corner point
   private var pM: Point = _     //upper right corner point
   private var childPtr: Int = _
+  private var count: Int = 0
 
   /** Δημιουγεί rectangle με το pm ως  bottom left corner
    * και το pM ως  upper right corner
@@ -26,9 +27,10 @@ class Rectangle extends GeometricObject {
     this(new Point(pmCoordinates), new Point(pMCoordinates))
   }
 
-  def this(childptr: Int, pmCoordinates: Array[Double], pMCoordinates: Array[Double]) = {
+  def this(childPtr: Int, count : Int, pmCoordinates: Array[Double], pMCoordinates: Array[Double]) = {
     this(new Point(pmCoordinates), new Point(pMCoordinates))
-    childPtr = childptr
+    this.childPtr = childPtr
+    this.count = count
   }
 
   /** Takes an Int 'N' to create new Points */
@@ -56,13 +58,14 @@ class Rectangle extends GeometricObject {
   def nDims: Int =
     pm.nDims
 
-  /** 2 * N dims * sizeof(double) + sizeof(int) */
-  override def getMemorySize: Int = 2 * N * sizeOfDouble + sizeOfInt
+  /** 2 * N dims * sizeof(double) + 2 * sizeof(int) */
+  override def getMemorySize: Int = 2 * N * sizeOfDouble + 2 * sizeOfInt
 
   def getChildID: Int = childPtr
 
   def setChildID(childID: Int):Unit =
     childPtr = childID
+
 
 /*---------------------- Rectangle Properties --------------------------------*/
 
@@ -131,7 +134,7 @@ class Rectangle extends GeometricObject {
    * @return true αν έγινε επέκταση του rectangle.
    *         false αν δεν έγινε επέκταση, δηλαδή όταν το P περιέχεται ήδη στο rectangle.
    */
-  def expandRectangle(O: GeometricObject): Rectangle = {
+  override def expandRectangle(O: GeometricObject): Rectangle = {
     O match {
       case point:     Point     => expandRectangle(point)
       case rectangle: Rectangle => expandRectangle(rectangle)
@@ -346,9 +349,13 @@ class Rectangle extends GeometricObject {
     overlapRectangle.getArea
   }
 
+
+/* ----------------------- Rectangle Serialization  ------------------------------*/
+
   override def serialize: String = {
     val sb: StringBuilder = new StringBuilder()
     sb.append(childPtr).append(",")
+      .append(count).append(",")
       .append(pm.serialize).append(",")
       .append(pM.serialize)
     sb.toString()
@@ -356,5 +363,14 @@ class Rectangle extends GeometricObject {
 
   override def toString: String =
     serialize
+
+
+/* ----------------------- Rectangle Count Aggregation  ------------------------------*/
+  override def getCount: Int = count
+  override def setCount(newCount: Int): Unit = count = newCount
+  override def increaseCount(value: Int): Unit = count += value
+  override def increaseCount(geoObj: GeometricObject): Unit = increaseCount(geoObj.getCount)
+  override def decreaseCount(value: Int): Unit = count -= value
+  override def decreaseCount(geoObj: GeometricObject): Unit = decreaseCount(geoObj.getCount)
 
 }

@@ -11,6 +11,11 @@ class LeafNode(nodeId: Int) extends TreeNode(nodeId, null) {
     setEntries(entries.asInstanceOf[ListBuffer[GeometricObject]])
   }
 
+  def this(nodeId: Int, SCount: Int, entries: ListBuffer[Point]) = {
+    this(nodeId, entries)
+    setSCount(SCount)
+  }
+
   override def isLeaf: Boolean = true
 
   /** @param index : Η θέση του entriesOnNode
