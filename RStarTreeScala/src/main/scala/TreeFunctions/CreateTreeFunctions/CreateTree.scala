@@ -144,8 +144,8 @@ class CreateTree(indexfile: IndexFile, logger : Logger) {
 
       var (geoObj, level) = toInclude.pop()
       level += (if(NewRootMade) 1 else 0)
-      chooseSubtree(geoObj, level)  //1
-      var (currentNode, entryIndex) = path.pop()  /*2*/                                                                 ; logger.info(s"\tgeoObject = ${geoObj.serialize} to be inserted to node [${currentNode.getNodeID}] (isLeaf ${currentNode.isLeaf}) at level = $level ...")
+      chooseSubtree(geoObj, level)                  /*1*/
+      var (currentNode, entryIndex) = path.pop()   /*2*/                                                                ; logger.info(s"\tgeoObject = ${geoObj.serialize} to be inserted to node [${currentNode.getNodeID}] (isLeaf ${currentNode.isLeaf}) at level = $level ...")
       currentNode.addEntry(geoObj)                /*3*/                                                                 ; logger.info(s"\t\t#entries = ${currentNode.getNumberOfEntries} (${currentNode.getNBytes} bytes)")
 
       /* Αν με την εισαγωγή ο κόμβος γέμισε -------------------------- */
@@ -156,29 +156,15 @@ class CreateTree(indexfile: IndexFile, logger : Logger) {
           return
 
         if (Split) { //5
-          if (path.nonEmpty) { //6 - split non root
-            val (currentNode, splitIndex) = path.pop()                                                                  ; logger.info(s"\t\tNon root splitted. Delete entry $splitIndex from current node ${currentNode.serialize}")
-            currentNode.deleteEntry(splitIndex)        //7
-            indexfile.writeNodeToFile(currentNode)                                                                      ; logger.info(s"\t\tAfter delete : ${currentNode.serialize}")
-
-          } else { // 8 - split root
-            root = new NonLeafNode(nextNodeID)  //9
-            NewRootMade = true
-            treeHeight += 1
-            nextNodeID += 1
-            /*10*/                                                                                                        logger.info(s"\tAdd geoObject = ${toInclude.top._1} (level = ${toInclude.top._2}) to root")
-            root.addEntry(toInclude.pop()._1)                                                                           ; logger.info(s"\tAdd geoObject = ${toInclude.top._1} (level = ${toInclude.top._2}) to root")
-            root.addEntry(toInclude.pop()._1)
-            indexfile.writeNodeToFile(root)
-            indexfile.updateMetadata(root.getNodeID, treeHeight, nextNodeID-1)                                          ; logger.info(s"\tMade new root [${root.getNodeID}] with # entries = ${root.getNumberOfEntries}")
-          }
-        } //end if Split
-      } //end if currentNode.isFull ------------------------------------ */
+          if (path.nonEmpty) handleNonRootSplit()   //6 - split non root
+          else handleRootSplit()                   // 8 - split root
+        }
+      }/* -------------------------------------------------------------- */
 
       /* Αλλίως αν με την εισαγωγή ο κόμβος δεν γέμισε ----------------- */
       else { // ADJUST PATH
         indexfile.writeNodeToFile(currentNode)    /*11*/                                                                ; logger.info(s"\tAdjust path:\t${path.toString()}")
-        while (path.nonEmpty) {  //12
+        while (path.nonEmpty) {                  /*12*/
           val (parentNode, parentIndex) = path.pop()                                                                    ; logger.info(s"\t\tAdjust parentNode [${parentNode.getNodeID}] parentIndex=$parentIndex : <${parentNode.getEntry(parentIndex)}> with new element at child node entry index = $entryIndex")
 
           parentNode.getEntry(parentIndex).asInstanceOf[Rectangle]
@@ -188,10 +174,29 @@ class CreateTree(indexfile: IndexFile, logger : Logger) {
 
           indexfile.writeNodeToFile(currentNode)  //13
         }
-      }//end not full => adjust path
-      /* ----------------------------------------------------------------*/
+      }/* ----------------------------------------------------------------*/
 
     }//end while toInclude.nonEmpty
+  }
+
+
+  private def handleNonRootSplit(): Unit = {
+    val (parentNode, splitIndex) = path.pop()                                                                          ; logger.info(s"\t\tNon root splitted. Delete entry $splitIndex from current node ${parentNode.serialize}")
+    parentNode.deleteEntry(splitIndex) //7
+    indexfile.writeNodeToFile(parentNode)                                                                              ; logger.info(s"\t\tAfter delete : ${parentNode.serialize}")
+  }
+
+
+  private def handleRootSplit(): Unit = {
+    root = new NonLeafNode(nextNodeID)  //9
+    NewRootMade = true
+    treeHeight += 1
+    nextNodeID += 1
+    /*10*/                                                                                                              logger.info(s"\tAdd geoObject = ${toInclude.top._1} (level = ${toInclude.top._2}) to root")
+    root.addEntry(toInclude.pop()._1)                                                                                   ; logger.info(s"\tAdd geoObject = ${toInclude.top._1} (level = ${toInclude.top._2}) to root")
+    root.addEntry(toInclude.pop()._1)
+    indexfile.writeNodeToFile(root)
+    indexfile.updateMetadata(root.getNodeID, treeHeight, nextNodeID-1)                                                  ; logger.info(s"\tMade new root [${root.getNodeID}] with # entries = ${root.getNumberOfEntries}")
   }
 
 
