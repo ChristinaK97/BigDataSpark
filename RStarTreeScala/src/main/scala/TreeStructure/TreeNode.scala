@@ -50,6 +50,7 @@ abstract class TreeNode(nodeId: Int, entries: ListBuffer[GeometricObject]) exten
     assert((isLeaf && entry.isInstanceOf[Point]) || (!isLeaf && entry.isInstanceOf[Rectangle]))
     entriesOnNode += entry
     NBytesInNode += entry.getMemorySize
+    increaseSCount(entry)
   }
 
   def deleteEntry(splitIndex: Int): Unit =
@@ -91,6 +92,8 @@ abstract class TreeNode(nodeId: Int, entries: ListBuffer[GeometricObject]) exten
   def increaseSCount(geoObj: GeometricObject): Unit = increaseSCount(geoObj.getCount)
   def decreaseSCount(value: Int): Unit = SCount -= value
   def decreaseSCount(geoObj: GeometricObject): Unit = decreaseSCount(geoObj.getCount)
-
+  def calculateSCount(): Unit = {
+    setSCount(map(entry => entry.getCount).sum)
+  }
 
 }

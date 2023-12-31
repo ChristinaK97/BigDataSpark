@@ -12,6 +12,8 @@ trait GeometricObject {
 
   def getCount: Int
 
+  def makeCopy: GeometricObject
+
 
   // only for rectangle
   def setCount(newCount: Int): Unit

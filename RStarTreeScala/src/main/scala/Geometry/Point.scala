@@ -16,6 +16,7 @@ class Point extends GeometricObject with Serializable {
   /** Constructor to set the coordinates field */
   def this(coordinates: Array[Double]) {
     this()
+    assert(N == -1 || coordinates.length == N)
     this.coordinates = coordinates
   }
 
@@ -25,7 +26,7 @@ class Point extends GeometricObject with Serializable {
   }
 
   /** @return Επιστρέφει ένα αντίγραφο του αντικειμένου */
-  def makeCopy: Point =
+  override def makeCopy: Point =
     new Point(pointID, coordinates.clone())
 
   def getPointID: Int = pointID

@@ -46,7 +46,7 @@ class Rectangle extends GeometricObject {
   }
 
   /** @return Επιστρέφει ένα αντίγραφο του αντικειμένου */
-  def makeCopy: Rectangle =
+  override def makeCopy: Rectangle =
     new Rectangle(this.pm.makeCopy, this.pM.makeCopy)
 
 
@@ -134,7 +134,7 @@ class Rectangle extends GeometricObject {
    * @return true αν έγινε επέκταση του rectangle.
    *         false αν δεν έγινε επέκταση, δηλαδή όταν το P περιέχεται ήδη στο rectangle.
    */
-  override def expandRectangle(O: GeometricObject): Rectangle = {
+  def expandRectangle(O: GeometricObject): Rectangle = {
     O match {
       case point:     Point     => expandRectangle(point)
       case rectangle: Rectangle => expandRectangle(rectangle)
