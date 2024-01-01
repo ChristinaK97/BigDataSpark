@@ -98,9 +98,9 @@ class NodeSplit(nextId: Int) {
    /* ******** */
     (
       MBRs(2*chosenAxis),
-      new LeafNode(node.getNodeID, sorts(chosenAxis).take(splitIndex)),
+      new LeafNode(node.getNodeID, splitIndex, sorts(chosenAxis).take(splitIndex)),
       MBRs(2*chosenAxis+1),
-      new LeafNode(nextID, sorts(chosenAxis).drop(splitIndex))
+      new LeafNode(nextID, node.getSCount - splitIndex, sorts(chosenAxis).drop(splitIndex))
     )
   }
 
@@ -211,11 +211,15 @@ class NodeSplit(nextId: Int) {
         chosenDiamerisi = 2*chosenAxis
     }
     /* ******** */
+    val node1 = new NonLeafNode(node.getNodeID, sorts(chosenDiamerisi).take(splitIndex)) //Πρώτος νέος κόμβος
+    node1.calculateSCount()
+    val node2 = new NonLeafNode(nextID, sorts(chosenDiamerisi).drop(splitIndex))          //Δεύτερος νέος κόμβος
+    node2.calculateSCount()
     (
       MBRs(2 * chosenDiamerisi)(0),
-      new NonLeafNode(node.getNodeID, sorts(chosenDiamerisi).take(splitIndex)), //Πρώτος νέος κόμβος
+      node1,
       MBRs(2 * chosenDiamerisi + 1)(1),
-      new NonLeafNode(nextID, sorts(chosenDiamerisi).drop(splitIndex))          //Δεύτερος νέος κόμβος
+      node2
     )
   }
 

@@ -7,7 +7,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 /**
- * Ετοιμάζει μια λίστα με τα στοιχεία (εγγραφές) που πρέπει να αφαιρεθούν
+ * Ετοιμάζει μια στοίβα με τα στοιχεία (εγγραφές) που πρέπει να αφαιρεθούν
  * από το node και να γίνουν reinsert στο δέντρο. (λίστα toReInsert)
  *
  * @param node : To TreeNode όπου προέκυψε overflow
@@ -21,13 +21,24 @@ class ReInsert(node: TreeNode, MBR: Rectangle, reInsertLevel: Int) {
   /**
    * @return Tuple:
    *  - TreeNode: Ο overflown κόμβος ενημερωμένος
+   *
    *  - Rectangle: Το parent MBR που περικλύει τις εγγραφές που απέμειναν στο node
+   *
    *  - ListBuffer[(GeometricObject, Int)]. Το πεδίο GeometricObject είναι
    *    - Rectangle αν node isa NonLeafNode
    *    - Point αν node isa LeafNode
+   *
+   *  - Η τιμή κατά την οποία θα μειωθούν οι counters στο path, δηλ.
+   *    - για leaf node,  το # Points που βγήκαν από το overflown leaf για reinsert
+   *    - ή για non leaf, το # Points που περικλύονται από τα MBRs που βγήκαν από το overflown non leaf για reinsert
+   *    Προκύπτει ως
+   *    { (node.SCount πριν αφαιρεθεί το 30% (ogCount) - ενημερωμένο node.SCount)
+   *     - (ogCount - count του parent MBR του node) }
+   *     Ο 2ος όρος διορθώνει το discrepancy που προκύπτει επειδή η run καλείται χωρίς πριν να
+   *     έχουν ενημερωθεί τα counters του path (:περιττά IO) για το insert του στοιχείου που προκάλεσε το overflow
    */
   def run():
-      (TreeNode, Rectangle, mutable.Stack[(GeometricObject, Int)]) =
+      (TreeNode, Rectangle, mutable.Stack[(GeometricObject, Int)], Int) =
   {
     val toReInsert: mutable.Stack[(GeometricObject, Int)] = mutable.Stack[(GeometricObject, Int)]()
 
@@ -50,8 +61,15 @@ class ReInsert(node: TreeNode, MBR: Rectangle, reInsertLevel: Int) {
         // οι υπόλοιπες (70%) εγγραφές που είναι πιο κοντά στο κέντρο, θα διατηρηθούν
         remainingEntries += node.getEntry(entryIndex)
     }
+    val ogCount = node.getSCount
     node.setEntries(remainingEntries)
-    (node, shrinkParent(), toReInsert)
+    node.calculateSCount()
+    (
+      node,
+      shrinkParent(),
+      toReInsert,
+      ogCount - node.getSCount - (ogCount - MBR.getCount)
+    )
   }
 
 
@@ -68,6 +86,7 @@ class ReInsert(node: TreeNode, MBR: Rectangle, reInsertLevel: Int) {
     for(i <- start until node.getNumberOfEntries)
       newParent.expandRectangle(node.getEntry(i))
     newParent.setChildID(node.getNodeID)
+    newParent.setCount(node.getSCount)
     newParent
   }
 
