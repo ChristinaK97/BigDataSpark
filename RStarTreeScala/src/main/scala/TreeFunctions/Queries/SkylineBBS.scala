@@ -3,6 +3,7 @@ package TreeFunctions.Queries
 import FileHandler.IndexFile
 import Geometry.{GeometricObject, Point, Rectangle}
 import TreeStructure.{LeafNode, TreeNode}
+import Util.Constants.DEBUG_SKY
 import Util.Logger
 
 import scala.collection.mutable
@@ -42,10 +43,10 @@ class SkylineBBS(indexFile: IndexFile, logger: Logger) {
   private def computeSkyline(): Unit = {
     addToHeap(indexFile.retrieveNode(rootID))                                        //1
     while(heap.nonEmpty) {                                                           //2
-      val (minEntry: GeometricObject, l1: Double) = heap.dequeue()                   /*3*/                              ; logger.info(s"\nL1 = $l1 \t  ${minEntry.serialize}")
+      val (minEntry: GeometricObject, l1: Double) = heap.dequeue()                   /*3*/                              ;if(DEBUG_SKY) logger.info(s"\nL1 = $l1 \t  ${minEntry.serialize}")
 
       minEntry match {                                                              //4
-        case p: Point     => sky += ((p, p.dominanceArea))                          /*5*/                               ; logger.info(s"Add to skyline \t < ${p.serialize} > \t # skyline = ${sky.length}")
+        case p: Point     => sky += ((p, p.dominanceArea))                          /*5*/                               ;if(DEBUG_SKY) logger.info(s"Add to skyline \t < ${p.serialize} > \t # skyline = ${sky.length}")
         case r: Rectangle => addToHeap(indexFile.retrieveNode(r.getChildID))        //6
       }
     }/*end while not empty*/
@@ -61,7 +62,7 @@ class SkylineBBS(indexFile: IndexFile, logger: Logger) {
   private def addToHeap(node: TreeNode): Unit = {
     node.zipWithIndex.foreach{case (geoObj, entryIndex) =>
       if(isDominant(entryIndex, geoObj, node)) {
-        heap.enqueue((geoObj, geoObj.L1))                                                                               ; logger.info(s"\tAdd to heap \t < ${geoObj.L1} : ${geoObj.serialize} > \t # heap = ${heap.length}")
+        heap.enqueue((geoObj, geoObj.L1))                                                                               ;if(DEBUG_SKY) logger.info(s"\tAdd to heap \t < ${geoObj.L1} : ${geoObj.serialize} > \t # heap = ${heap.length}")
       }
     }
   }
