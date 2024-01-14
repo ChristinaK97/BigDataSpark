@@ -374,15 +374,30 @@ class Rectangle extends GeometricObject {
   override def decreaseCount(geoObj: GeometricObject): Unit = decreaseCount(geoObj.getCount)
 
 
+  /** To upper bound του dominance score κάθε σημείου q που περικλύεται από το rectangle
+   *  είναι ίσο με το πλήθος των σημείων p που κυριαρχούνται από το pm.
+   *  dom(q) <= dom(r.pm)
+   *
+   *       p1   |    p2
+   *    --------|-------- pM
+   *   |        |       |
+   *   |       q -------| --------------
+   *   |                |
+   * pm ----------------
+   *
+   *  dom(q)=1 από το p2, αλλά upper_bound_dom(q)=2 αφού το pm κυριαρχεί στα p1 και p2
+   *
+   */
   override def dominates(p: Point) : Boolean =
     pm.dominates(p)
 
   /** Used for calculating the upper limit for the dominance score
    *  of the points contained by this rectangle
    *
-   *  pm dominates all points in rectangle r,
+   *  this.pm dominates all points in rectangle r,
    *  but we are not sure if all points in this rectangle
-   *  dominate all points in r
+   *  dominate all points in r.
+   *  this might only partially dominate r
    */
   override def dominates(r: Rectangle) : Boolean =
     pm.dominates(r.pm)

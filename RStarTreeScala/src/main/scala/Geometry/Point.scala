@@ -83,6 +83,16 @@ class Point extends GeometricObject with Serializable {
     foundStrictlyBetter
   }
 
+
+  /** Ένα σημείο κυριαρχεί σε όλα τα σημεία ενός rectangle αν κυριαρχεί στο pm.
+   *    |
+   *    |           -------------------  pM
+   *    |          |                   |
+   *    |          |                   |
+   *    |       pm --------------------
+   *    |
+   *    p--------------------------------------
+   */
   override def dominates(r: Rectangle): Boolean =
     dominates(r.get_pm)
 
