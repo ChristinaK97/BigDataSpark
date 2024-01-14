@@ -373,4 +373,20 @@ class Rectangle extends GeometricObject {
   override def decreaseCount(value: Int): Unit = count -= value
   override def decreaseCount(geoObj: GeometricObject): Unit = decreaseCount(geoObj.getCount)
 
+
+  override def dominates(p: Point) : Boolean =
+    pm.dominates(p)
+
+  /** Used for calculating the upper limit for the dominance score
+   *  of the points contained by this rectangle
+   *
+   *  pm dominates all points in rectangle r,
+   *  but we are not sure if all points in this rectangle
+   *  dominate all points in r
+   */
+  override def dominates(r: Rectangle) : Boolean =
+    pm.dominates(r.pm)
+
+
+
 }

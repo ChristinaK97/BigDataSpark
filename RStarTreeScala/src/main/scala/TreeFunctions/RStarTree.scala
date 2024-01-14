@@ -3,11 +3,12 @@ package TreeFunctions
 import FileHandler.IndexFile
 import Geometry.{Point, Rectangle}
 import TreeFunctions.CreateTreeFunctions.CreateTree
-import TreeFunctions.Queries.SkylineBBS
+import TreeFunctions.Queries.{SkylineBBS, TopK_SCG}
 import TreeStructure.TreeNode
 import Util.Constants.N
 import Util.Logger
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class RStarTree(pointsPartition: Iterator[Point], nDims: Int) {
@@ -32,6 +33,10 @@ class RStarTree(pointsPartition: Iterator[Point], nDims: Int) {
       Left(datasetSkyline.getSkylineWithDomAreas)
     else
       Right(datasetSkyline.getSkylinePoints)
+  }
+
+  def computeDatasetTopK(k: Int): mutable.PriorityQueue[Point] = {
+    new TopK_SCG(k, indexfile, logger).SimpleCountGuidedAlgorithm()
   }
 
 /* ---------------------------------------------------------------------------------------------------------*/

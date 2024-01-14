@@ -72,7 +72,7 @@ class Point extends GeometricObject with Serializable {
    * all dimensions satisfy the first condition but none satisfy the second condition,
    * then p does not dominate q.
    **/
-  def dominates(q: Point): Boolean = {
+  override def dominates(q: Point): Boolean = {
     var foundStrictlyBetter = false
     for(i <- 0 until N) {
       if(this.coordinates(i) < q.coordinates(i))
@@ -82,6 +82,10 @@ class Point extends GeometricObject with Serializable {
     }
     foundStrictlyBetter
   }
+
+  override def dominates(r: Rectangle): Boolean =
+    dominates(r.get_pm)
+
 
 
   /** Υπολογίζει την L1 απόσταση του σημείου από την αρχή των αξόνων ως
