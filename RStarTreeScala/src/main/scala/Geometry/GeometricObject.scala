@@ -25,10 +25,9 @@ abstract class GeometricObject {
   def dominates(r: Rectangle): Boolean
 
   // dom scores for top k ---------------------------------------------
-  private var domScore: Int = _
+  private var domScore: Int = 0
 
   def getDomScore: Int = domScore
-  def resetDomScore(): Unit = domScore = 0
   def increaseDomScore(value: Int): Unit = domScore += value
   // ------------------------------------------------------------------
 

@@ -3,7 +3,7 @@ package TreeFunctions
 import FileHandler.IndexFile
 import Geometry.{Point, Rectangle}
 import TreeFunctions.CreateTreeFunctions.CreateTree
-import TreeFunctions.Queries.{SkylineBBS, TopK_SCG}
+import TreeFunctions.Queries.{TopK, SkylineBBS, SkylineTopK}
 import TreeStructure.TreeNode
 import Util.Constants.N
 import Util.Logger
@@ -15,7 +15,7 @@ class RStarTree(pointsPartition: Iterator[Point], nDims: Int) {
   N = nDims
   private var indexfile: IndexFile = _
   private val logger = new Logger()
-  private val resetTree = true
+  private val resetTree = false
 
 
   def createTree(rTreeID: Long) : Unit = {
@@ -27,16 +27,14 @@ class RStarTree(pointsPartition: Iterator[Point], nDims: Int) {
 
 /* Ερώτημα 1: Υπολογισμός skyline στο dataset ----------------------------------------------------------- */
 
-  def computeDatasetSkyline(retrieveDomArea: Boolean): Either[ListBuffer[(Point,Rectangle)], ListBuffer[Point]] = {
-    val datasetSkyline: SkylineBBS = new SkylineBBS(indexfile, logger)
-    if (retrieveDomArea)
-      Left(datasetSkyline.getSkylineWithDomAreas)
-    else
-      Right(datasetSkyline.getSkylinePoints)
+  def computeDatasetSkyline(): ListBuffer[(Point, Int)] = {
+    val skyline = new SkylineBBS(indexfile, logger).BranchAndBound()
+    new SkylineTopK(indexfile, skyline, 10, logger).SimpleCountGuidedAlgorithm()
+    skyline
   }
 
   def computeDatasetTopK(k: Int): mutable.PriorityQueue[Point] = {
-    new TopK_SCG(k, indexfile, logger).SimpleCountGuidedAlgorithm()
+    new TopK(indexfile, k, logger).SimpleCountGuidedAlgorithm()
   }
 
 /* ---------------------------------------------------------------------------------------------------------*/

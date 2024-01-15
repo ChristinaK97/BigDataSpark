@@ -15,18 +15,18 @@ class SkylineBBS(indexFile: IndexFile, logger: Logger) {
 
   /** Point: Τα σημεία που ανήκουν στην κορυφογραμμή.
    *  Rectangle: Η περιοχή κυριαρχίας του σημείο P είναι ένα ορθωγώνιο με pm= P, pM= [Double.MAX]
-  */ private val sky : ListBuffer[(Point, Rectangle)] = ListBuffer[(Point, Rectangle)]()
+   *  Int: nodeID του LeafNode που περιέχει το sky point στα entries του
+  */ private val sky : ListBuffer[(Point, Rectangle, Int)] = ListBuffer[(Point, Rectangle, Int)]()
 
   /** Στοίβα διάσχισης. Κάθε pair (GeometricObject, Double) είναι μία εγγραφή του δέντρου που θα προσπελαστεί
    *  με την ελάχιστη L1 απόσταση από την αρχή των αξόνων (θεωρείται ότι καλύτερα σημεία είναι αυτά με τα MIN
    *  values). Η στοίβα είναι minheap, άρα σημεία κατά την διάσχιση δίνεται προτεραιότητα στα σημεία με τη
    *  μικρότερη απόσταση.
-  */ private val heap = mutable.PriorityQueue.empty[(GeometricObject, Double)](
-                Ordering.by[(GeometricObject, Double), Double](_._2).reverse)
+   *  Το Int είναι το nodeID που περιέχει το GeoObj στα entries του
+  */ private val heap = mutable.PriorityQueue.empty[(GeometricObject, Int, Double)](
+                Ordering.by[(GeometricObject, Int, Double), Double](_._3).reverse)
 
   logger.info("-"*100 + "\nCompute Skyline\n" + "-"*100)
-  computeSkyline()
-  logger.info(toString)
 
 
   /** Υπολογίζει το skyline από τα δεδομένα του δέντρου.
@@ -40,17 +40,23 @@ class SkylineBBS(indexFile: IndexFile, logger: Logger) {
    *       6. Rectangle: Θα πρέπει να το προσπελάσω, δηλαδή να εξετάσω το child node του
    *          Τα entries που child node προστίθονται στο heap, αν ικανοποιούν τα Κ1, Κ2
    */
-  private def computeSkyline(): Unit = {
+  def BranchAndBound(): ListBuffer[(Point, Int)] = {
     addToHeap(indexFile.retrieveNode(rootID))                                        //1
     while(heap.nonEmpty) {                                                           //2
-      val (minEntry: GeometricObject, l1: Double) = heap.dequeue()                   /*3*/                              ;if(DEBUG_SKY) logger.info(s"\nL1 = $l1 \t  ${minEntry.serialize}")
+      val (minEntry: GeometricObject, nodeID: Int, l1: Double) = heap.dequeue()                   /*3*/                              ;if(DEBUG_SKY) logger.info(s"\nL1 = $l1 \t  ${minEntry.serialize}")
 
       minEntry match {                                                              //4
-        case p: Point     => sky += ((p, p.dominanceArea))                          /*5*/                               ;if(DEBUG_SKY) logger.info(s"Add to skyline \t < ${p.serialize} > \t # skyline = ${sky.length}")
+        case p: Point     => sky += ((p, p.dominanceArea, nodeID))                          /*5*/                               ;if(DEBUG_SKY) logger.info(s"Add to skyline \t < ${p.serialize} > \t # skyline = ${sky.length}")
         case r: Rectangle => addToHeap(indexFile.retrieveNode(r.getChildID))        //6
       }
     }/*end while not empty*/
+    logger.info(toString)
+    getSkylinePoints
   }
+
+
+  private def getSkylinePoints: ListBuffer[(Point, Int)] =
+    sky.map { case (p, _, leafNodeID) => (p, leafNodeID) }
 
 
   /** Για να εισαχθεί ένα σημείο ως υποψήφιο προς προσπέλαση στην στοίβα
@@ -62,7 +68,7 @@ class SkylineBBS(indexFile: IndexFile, logger: Logger) {
   private def addToHeap(node: TreeNode): Unit = {
     node.zipWithIndex.foreach{case (geoObj, entryIndex) =>
       if(isDominant(entryIndex, geoObj, node)) {
-        heap.enqueue((geoObj, geoObj.L1))                                                                               ;if(DEBUG_SKY) logger.info(s"\tAdd to heap \t < ${geoObj.L1} : ${geoObj.serialize} > \t # heap = ${heap.length}")
+        heap.enqueue((geoObj, node.getNodeID, geoObj.L1))                                                                               ;if(DEBUG_SKY) logger.info(s"\tAdd to heap \t < ${geoObj.L1} : ${geoObj.serialize} > \t # heap = ${heap.length}")
       }
     }
   }
@@ -103,7 +109,7 @@ class SkylineBBS(indexFile: IndexFile, logger: Logger) {
    * @return true αν το geoObj ΔΕΝ κυριαρχείται από κάποιο σημείο του skyline
    */
   private def isDominatedBySky(geoObj: GeometricObject): Boolean = {
-    sky.foreach{case (_, skyPointDomArea) =>
+    sky.foreach{case (_, skyPointDomArea, _) =>
       if(skyPointDomArea.contains(geoObj))
         return true
     }
@@ -111,19 +117,15 @@ class SkylineBBS(indexFile: IndexFile, logger: Logger) {
   }
 
 
-// Public - retrieve results  -----------------------------------------------------------------
-  def getSkylineWithDomAreas: ListBuffer[(Point, Rectangle)] = sky
-
-  def getSkylinePoints: ListBuffer[Point] =
-    sky.map { case (p, _) => p }
 
 
 
+//======================================================================================================================
   override def toString: String = {
     val sb: StringBuilder = new StringBuilder()
     sb.append(s"\nSkyline Results :\n\t# points = ${sky.length}\n\t")
-    sky.foreach{case (p, domArea) =>
-      sb.append(p.serialize) //.append(s"\t\tDomArea = ${domArea.serialize}")
+    sky.foreach{case (p, domArea, leafNodeID) =>
+      sb.append(p.serialize).append(s"\tleafID = $leafNodeID") //.append(s"\t\tDomArea = ${domArea.serialize}")
       sb.append("\n\t")
     }
     sb.toString()
