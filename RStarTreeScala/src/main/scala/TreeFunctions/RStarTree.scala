@@ -5,7 +5,7 @@ import Geometry.{Point, Rectangle}
 import TreeFunctions.CreateTreeFunctions.CreateTree
 import TreeFunctions.Queries.{SkylineBBS, SkylineTopK, TopK}
 import TreeStructure.TreeNode
-import Util.Constants.{DEBUG, DEBUG_SKY, N, RESET_TREES}
+import Util.Constants.{DEBUG, N, RESET_TREES}
 import Util.Logger
 
 import scala.collection.mutable
@@ -17,7 +17,7 @@ class RStarTree(pointsPartition: Iterator[Point], nDims: Int) {
   private var logger: Logger = _
 
 
-  def createTree(rTreeID: Long) : Unit = {
+  def createTree(rTreeID: String) : Unit = {
     indexFile = new IndexFile(RESET_TREES, rTreeID)
     logger = new Logger(indexFile.PARTITION_DIR)
     if(indexFile.getTreeWasReset)
@@ -38,13 +38,20 @@ class RStarTree(pointsPartition: Iterator[Point], nDims: Int) {
     val topKSkyline = new SkylineTopK(indexFile, skyline, kForSkyline, logger).SimpleCountGuidedAlgorithm()
 
     // top k from the whole partition
-    logger.info("-"*100 + s"\nCompute Dataset Top${kForDataset}\n" + "-"*100)
+    logger.info("-"*100 + s"\nCompute Partition Top${kForDataset}\n" + "-"*100)
     val topKPartition = new TopK(indexFile, kForDataset, logger).SimpleCountGuidedAlgorithm()
     (
       skyline.map{case (p,_) => p},
       topKPartition,
       topKSkyline
     )
+  }
+
+  def runSkylineQuery(): ListBuffer[Point] = {
+    logger.info("-" * 100 + "\nCompute Skyline\n" + "-" * 100)
+    new SkylineBBS(indexFile, logger)
+      .BranchAndBound()
+      .map{case (p,_) => p}
   }
 
 

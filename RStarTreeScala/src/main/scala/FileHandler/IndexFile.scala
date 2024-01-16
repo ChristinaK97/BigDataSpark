@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path, Paths}
 import scala.collection.mutable.ListBuffer
 
-class IndexFile(resetTree: Boolean, rTreeID: Long) {
+class IndexFile(resetTree: Boolean, rTreeID: String) {
 
   private val K: Int = UP_LIMIT / (16 * N + 4)
   private var BLOCK_CAPACITY: Int = 8 + 7 + K * (7 + 4 + 44 * N)
@@ -221,7 +221,7 @@ class IndexFile(resetTree: Boolean, rTreeID: Long) {
 
   // for testing
   def this(CAPACITY: Int, testing: Boolean) = {
-    this(true, -1)
+    this(true, "-1")
     BLOCK_CAPACITY = CAPACITY
   }
 }

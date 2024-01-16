@@ -1,4 +1,5 @@
 import Geometry.Point
+import TreeFunctions.Queries.MergePartitionsResults
 import TreeFunctions.RStarTree
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
@@ -35,13 +36,16 @@ object Main {
     val repartitionedRDD = pointsRDD.repartition(nPartitions)
     println(s"# partitions = ${repartitionedRDD.getNumPartitions}")
 
-    repartitionedRDD.mapPartitionsWithIndex { (partitionID, pointsPartition) =>
+
+    val partitionsResults = repartitionedRDD.mapPartitionsWithIndex { (partitionID, pointsPartition) =>
       val rTree = new RStarTree(pointsPartition, nDims)
-      rTree.createTree(partitionID)
+      rTree.createTree(partitionID.toString)
       val (skyline, topKPartition, topKSkyline)  = rTree.runQueries(kForDataset, kForSkyline)
       rTree.close()
       Iterator((skyline, topKPartition, topKSkyline))
     }.collect()
+
+    new MergePartitionsResults(nDims, partitionsResults, kForDataset, kForSkyline)
 
     sc.stop()
   }
