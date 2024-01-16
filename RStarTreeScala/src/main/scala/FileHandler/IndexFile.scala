@@ -6,6 +6,7 @@ import Util.Constants.{N, UP_LIMIT}
 
 import java.io.{File, RandomAccessFile}
 import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Path, Paths}
 import scala.collection.mutable.ListBuffer
 
 class IndexFile(resetTree: Boolean, rTreeID: Long) {
@@ -13,8 +14,9 @@ class IndexFile(resetTree: Boolean, rTreeID: Long) {
   private val K: Int = UP_LIMIT / (16 * N + 4)
   private var BLOCK_CAPACITY: Int = 8 + 7 + K * (7 + 4 + 44 * N)
 
-  private val INDEXFILE_PATH = s"indexfile_$rTreeID.txt"
-  private val METADATA_PATH  = s"metadata_$rTreeID.txt"
+  val PARTITION_DIR: Path = Paths.get(s"RTrees/RTreePartition_$rTreeID")
+  private val INDEXFILE_PATH = Paths.get(s"$PARTITION_DIR/indexfile.txt").toString
+  private val METADATA_PATH  = Paths.get(s"$PARTITION_DIR/metadata.txt").toString
 
   private var metadata: Metadata = _
   private val treeWasReset: Boolean = prepareTreeFiles()
@@ -48,9 +50,13 @@ class IndexFile(resetTree: Boolean, rTreeID: Long) {
     resetTreeVar
   }
   private def resetFiles(indexfileFile: File, metadataFile: File): Unit = {
-    indexfileFile.delete()
+    if(Files.exists(PARTITION_DIR)) {
+      indexfileFile.delete()
+      metadataFile.delete()
+    }else
+      Files.createDirectories(PARTITION_DIR)
+
     indexfileFile.createNewFile()
-    metadataFile.delete()
     metadataFile.createNewFile()
   }
 

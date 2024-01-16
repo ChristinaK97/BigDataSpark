@@ -6,32 +6,42 @@ import org.apache.spark.{SparkConf, SparkContext}
 object Main {
 
   private def readPointsRDD(sc: SparkContext, dataPath: String): (RDD[Point], Int) = {
-    // TODO: add ids to points
-    val pointsRDD = sc.textFile(dataPath)
-      .mapPartitionsWithIndex {
-        (idx, iter) => if (idx == 0) iter.drop(1) else iter}
-      .map(line => line.split(",").map(_.trim.toDouble))
-      .map(array => new Point(array))
-      .repartition(1)
 
+    val pointsRDD = sc.textFile(dataPath)
+      .mapPartitionsWithIndex { (idx, iter) => if (idx == 0) iter.drop(1) else iter}
+      .zipWithIndex()
+      .map { case (line, id) =>
+        val coordinates = line.split(",").map(_.trim.toDouble)
+        new Point(id.toInt, coordinates)
+      }
     val nDims = pointsRDD.take(1)(0).nDims
 
-    pointsRDD.take(10).foreach{p => println(s"${p.nDims} ${p.serialize}")}
+    //pointsRDD.take(10).foreach{p => println(s"${p.nDims} ${p.serialize}")}
     (pointsRDD, nDims)
   }
 
 
   def main(args: Array[String]): Unit = {
-    val conf = new SparkConf().setMaster("local[*]").setAppName("SkylineRStarTree")
+    //ARGS:
+    val dataPath = "file:///C:/Users/karal/progr/Scala/BigDataSpark/dist_generator/uniform.csv"
+    val nPartitions = 2
+    val kForDataset = 10
+    val kForSkyline = 10
+
+    val conf = new SparkConf().setMaster("local[*]").setAppName("RStarTreeScala")
     val sc = new SparkContext(conf)
 
-    val dataPath = "file:///C:/Users/karal/progr/Scala/BigDataSpark/dist_generator/uniform.csv"
     val (pointsRDD, nDims) = readPointsRDD(sc, dataPath)
+    val repartitionedRDD = pointsRDD.repartition(nPartitions)
+    println(s"# partitions = ${repartitionedRDD.getNumPartitions}")
 
-    val rTreePerPartition: RDD[RStarTree] = pointsRDD.mapPartitions { partition =>
-      Iterator(new RStarTree(partition, nDims))
-    }
-    rTreePerPartition.zipWithIndex.foreach { case (rTree, rTreeID) => rTree.createTree(rTreeID) }
+    repartitionedRDD.mapPartitionsWithIndex { (partitionID, pointsPartition) =>
+      val rTree = new RStarTree(pointsPartition, nDims)
+      rTree.createTree(partitionID)
+      val (skyline, topKPartition, topKSkyline)  = rTree.runQueries(kForDataset, kForSkyline)
+      rTree.close()
+      Iterator((skyline, topKPartition, topKSkyline))
+    }.collect()
 
     sc.stop()
   }

@@ -3,9 +3,9 @@ package TreeFunctions
 import FileHandler.IndexFile
 import Geometry.{Point, Rectangle}
 import TreeFunctions.CreateTreeFunctions.CreateTree
-import TreeFunctions.Queries.{TopK, SkylineBBS, SkylineTopK}
+import TreeFunctions.Queries.{SkylineBBS, SkylineTopK, TopK}
 import TreeStructure.TreeNode
-import Util.Constants.N
+import Util.Constants.{DEBUG, DEBUG_SKY, N, RESET_TREES}
 import Util.Logger
 
 import scala.collection.mutable
@@ -13,34 +13,45 @@ import scala.collection.mutable.ListBuffer
 
 class RStarTree(pointsPartition: Iterator[Point], nDims: Int) {
   N = nDims
-  private var indexfile: IndexFile = _
-  private val logger = new Logger()
-  private val resetTree = false
+  private var indexFile: IndexFile = _
+  private var logger: Logger = _
 
 
   def createTree(rTreeID: Long) : Unit = {
-    indexfile = new IndexFile(resetTree, rTreeID)
-    if(indexfile.getTreeWasReset)
-      new CreateTree(indexfile, pointsPartition, logger)
-    validateDataConsistency()
+    indexFile = new IndexFile(RESET_TREES, rTreeID)
+    logger = new Logger(indexFile.PARTITION_DIR)
+    if(indexFile.getTreeWasReset)
+      new CreateTree(indexFile, pointsPartition, logger)
+    if(DEBUG) validateDataConsistency()
   }
 
-/* Ερώτημα 1: Υπολογισμός skyline στο dataset ----------------------------------------------------------- */
 
-  def computeDatasetSkyline(): ListBuffer[(Point, Int)] = {
-    val skyline = new SkylineBBS(indexfile, logger).BranchAndBound()
-    new SkylineTopK(indexfile, skyline, 10, logger).SimpleCountGuidedAlgorithm()
-    skyline
+/* Ερωτήματα: Υπολογισμός skyline στο dataset και top k ------------------------------------------------------------- */
+
+  def runQueries(kForDataset: Int, kForSkyline: Int): (ListBuffer[Point], mutable.PriorityQueue[Point], mutable.PriorityQueue[Point])  = {
+    // partition skyline
+    logger.info("-"*100 + "\nCompute Skyline\n" + "-"*100)
+    val skyline = new SkylineBBS(indexFile, logger).BranchAndBound()
+
+    // top k from skyline points
+    logger.info("-"*100 + s"\nCompute Skyline Top${kForSkyline}\n" + "-"*100)
+    val topKSkyline = new SkylineTopK(indexFile, skyline, kForSkyline, logger).SimpleCountGuidedAlgorithm()
+
+    // top k from the whole partition
+    logger.info("-"*100 + s"\nCompute Dataset Top${kForDataset}\n" + "-"*100)
+    val topKPartition = new TopK(indexFile, kForDataset, logger).SimpleCountGuidedAlgorithm()
+    (
+      skyline.map{case (p,_) => p},
+      topKPartition,
+      topKSkyline
+    )
   }
 
-  def computeDatasetTopK(k: Int): mutable.PriorityQueue[Point] = {
-    new TopK(indexfile, k, logger).SimpleCountGuidedAlgorithm()
-  }
 
-/* ---------------------------------------------------------------------------------------------------------*/
+/* -------------------------------------------------------------------------------------------------------------------*/
   def close(): Unit = {
     logger.close()
-    indexfile.closeFile()
+    indexFile.closeFile()
   }
 
 
@@ -61,19 +72,21 @@ class RStarTree(pointsPartition: Iterator[Point], nDims: Int) {
   }
 
   private def searchForMissingPoints() : Unit = {
-    val counter: Array[ListBuffer[Int]] = Array.fill[ListBuffer[Int]](indexfile.getNumOfPoints)(ListBuffer[Int]())
-    for (nodeID <- 1 until indexfile.getNumOfNodes + 1) {
-      val node: TreeNode = indexfile.retrieveNode(nodeID)
+    val counter = mutable.HashMap[Int, ListBuffer[Int]]()
+    for (nodeID <- 1 until indexFile.getNumOfNodes + 1) {
+      val node: TreeNode = indexFile.retrieveNode(nodeID)
       if (node.isLeaf)
         node.foreach { case p: Point =>
-          counter(p.getPointID) += nodeID
+          if(counter.contains(p.getPointID))
+            counter(p.getPointID) += nodeID
+          else
+            counter(p.getPointID) = ListBuffer[Int](nodeID)
         }
     }
     //logger.info("-" * 100 + "\nPoints in leaves :\n")
     //for (pID <- counter.indices) logger.info(s"Point $pID in # leaves = ${counter(pID).length} : ${counter(pID)}")
     logger.info("-" * 100 + "\nMissing points:\n")
-    for (pID <- counter.indices) {
-      val pLeaves: ListBuffer[Int] = counter(pID)
+    counter.foreach{case (pID, pLeaves) =>
       if (pLeaves.length > 1)
         logger.info(s"Point $pID : Found Duplicates (# = ${pLeaves.length}) in leaves = ${pLeaves.toString()}")
       else if (pLeaves.isEmpty)
@@ -84,12 +97,12 @@ class RStarTree(pointsPartition: Iterator[Point], nDims: Int) {
   private def validateAggrCounters(): Unit = {
     logger.info("\nAggregation (count) inconsistencies:\n")
 
-    val rootNode = indexfile.retrieveNode(indexfile.getRootID)
-    if(rootNode.getSCount != indexfile.getNumOfPoints)
-      logger.info(s"Root [${rootNode.getNodeID}].SCount = ${rootNode.getSCount} isDiffThan total # points in dataset = ${indexfile.getNumOfPoints}\t\t ${rootNode.serialize}")
+    val rootNode = indexFile.retrieveNode(indexFile.getRootID)
+    if(rootNode.getSCount != indexFile.getNumOfPoints)
+      logger.info(s"Root [${rootNode.getNodeID}].SCount = ${rootNode.getSCount} isDiffThan total # points in dataset = ${indexFile.getNumOfPoints}\t\t ${rootNode.serialize}")
 
-    for (nodeID <- 1 until indexfile.getNumOfNodes + 1) {
-      val node = indexfile.retrieveNode(nodeID)
+    for (nodeID <- 1 until indexFile.getNumOfNodes + 1) {
+      val node = indexFile.retrieveNode(nodeID)
       val entriesCountSum = node.getEntries.map(entry => entry.getCount).sum
 
       if(node.getSCount != entriesCountSum)
@@ -100,7 +113,7 @@ class RStarTree(pointsPartition: Iterator[Point], nDims: Int) {
 
       if(!node.isLeaf)
         node.zipWithIndex.foreach{case (mbr, i) =>
-          val childNode = indexfile.retrieveNode(mbr.asInstanceOf[Rectangle].getChildID)
+          val childNode = indexFile.retrieveNode(mbr.asInstanceOf[Rectangle].getChildID)
           if(mbr.getCount != childNode.getSCount)
             logger.info(s"MBR [$nodeID][$i].count = ${mbr.getCount} isDiffThan [${childNode.getNodeID}].SCount = ${childNode.getSCount}" +
               s"\t\tMBR = $mbr \t\t childNode = ${childNode.serialize}")

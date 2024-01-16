@@ -26,8 +26,6 @@ class SkylineBBS(indexFile: IndexFile, logger: Logger) {
   */ private val heap = mutable.PriorityQueue.empty[(GeometricObject, Int, Double)](
                 Ordering.by[(GeometricObject, Int, Double), Double](_._3).reverse)
 
-  logger.info("-"*100 + "\nCompute Skyline\n" + "-"*100)
-
 
   /** Υπολογίζει το skyline από τα δεδομένα του δέντρου.
    *  1. Προσθέτει στο minheap τα entries του root node.
