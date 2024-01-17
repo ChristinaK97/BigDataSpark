@@ -25,7 +25,7 @@ object Main {
   def main(args: Array[String]): Unit = {
     //ARGS:
     val dataPath = "file:///C:/Users/karal/progr/Scala/BigDataSpark/dist_generator/uniform.csv"
-    val nPartitions = 2
+    val nPartitions = 4
     val kForDataset = 10
     val kForSkyline = 10
 
@@ -42,7 +42,7 @@ object Main {
       rTree.createTree(partitionID.toString)
       val (skyline, topKPartition, topKSkyline)  = rTree.runQueries(kForDataset, kForSkyline)
       rTree.close()
-      Iterator((skyline, topKPartition, topKSkyline))
+      Iterator((partitionID.toString, skyline, topKPartition, topKSkyline))
     }.collect()
 
     new MergePartitionsResults(nDims, partitionsResults, kForDataset, kForSkyline)

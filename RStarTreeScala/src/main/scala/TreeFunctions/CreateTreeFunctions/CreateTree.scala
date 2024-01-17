@@ -71,9 +71,9 @@ class CreateTree(indexfile: IndexFile, logger : Logger) {
       toInsert += point
       insertFrom_toReInsert_toInsert()
     })
-    indexFile.writeNodeToFile(root)                                                                                     ; if(DEBUG) logger.info(s"# IOs = ${indexFile.getIOs}\t tree height = $treeHeight\t # nodes = ${nextNodeID - 1}\t root node id [${root.getNodeID}] with childPtrs = ${if(!root.isLeaf) root.map(entry=> entry.asInstanceOf[Rectangle].getChildID) else root.isLeaf}")
+    indexFile.writeNodeToFile(root)
     indexfile.updateMetadata(root.getNodeID, treeHeight, nextNodeID-1)
-    indexFile.setNumOfPoints(counter)
+    indexFile.setNumOfPoints(counter)                                                                                   ; if(DEBUG) logger.info(s"# IOs = ${indexFile.getIOs}\t tree height = $treeHeight\t # nodes = ${nextNodeID - 1}\t # points = ${indexFile.getNumOfPoints} \t root node id [${root.getNodeID}] with childPtrs = ${if(!root.isLeaf) root.map(entry=> entry.asInstanceOf[Rectangle].getChildID) else root.isLeaf}")
   }
 
 
