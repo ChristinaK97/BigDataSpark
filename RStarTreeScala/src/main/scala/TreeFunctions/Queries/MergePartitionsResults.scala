@@ -3,12 +3,13 @@ package TreeFunctions.Queries
 import FileHandler.IndexFile
 import Geometry.Point
 import TreeFunctions.RStarTree
+import org.apache.spark.SparkContext
 
-import scala.collection.immutable.HashMap
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class MergePartitionsResults(
+  //sc: SparkContext,
   nDims: Int,             //partID, Skyline Points,    Partitions Top k,              Skylines Top k
   partitionsResults: Array[(String, ListBuffer[Point], mutable.PriorityQueue[Point], mutable.PriorityQueue[Point])],
   kForDataset: Int,
@@ -57,15 +58,18 @@ class MergePartitionsResults(
       pTopK = pTopK.map(partitionTopK => partitionTopK.filter(p => skylinePointsIDs.contains(p.getPointID)))
     }
 
-    globalTopKScores(pTopK)
+    //decentralizedGlobalTopKScores(pTopK)
+    centralizedGlobalTopKScores(pTopK)
     globalTopKHeap(pTopK, k)
+
   }
 
 
-  private def globalTopKScores(pTopK: Array[Array[Point]]): Unit = {
+  private def centralizedGlobalTopKScores(pTopK: Array[Array[Point]]): Unit = {
 
-    val indexFiles: HashMap[String, IndexFile] = HashMap(partitionIDs.map(partitionID =>
-      (partitionID, new IndexFile(false, partitionID)) ): _*)
+    val indexFiles: Map[String, IndexFile] = partitionIDs.map(partitionID =>
+      partitionID -> new IndexFile(false, partitionID)
+    ).toMap
 
     pTopK.zipWithIndex.foreach{case (partition_i_topK, i) =>
       val partition_i_id = partitionIDs(i)
@@ -75,9 +79,7 @@ class MergePartitionsResults(
           new MergePointCount(partition_i_topK, indexFile_j)
       }
     }
-
   }
-
 
 
 
@@ -101,7 +103,49 @@ class MergePartitionsResults(
 
 
 
+  /*private def decentralizedGlobalTopKScores(pTopK: Array[Array[Point]]): Unit = {
+    val indexFiles: Map[String, IndexFile] = partitionIDs.map(partitionID =>
+      partitionID -> new IndexFile(false, partitionID)
+    ).toMap
 
+    val dataSeq = ListBuffer[(IndexFile, ListBuffer[Point])]()
+    indexFiles.foreach { case (partition_j_id, indexFile_j) =>
+      val otherPartitionsPoints = ListBuffer[Point]()
+
+      pTopK.zipWithIndex.foreach { case (partition_i_topK, i) =>
+        val partition_i_id = partitionIDs(i)
+        if (!partition_j_id.equals(partition_i_id))
+          otherPartitionsPoints.addAll(partition_i_topK)
+      }
+      dataSeq += ((indexFile_j, otherPartitionsPoints))
+    }
+    val dataRDD: RDD[(IndexFile, ListBuffer[Point])] = sc.parallelize(dataSeq.toSeq, nPartitions)
+
+    val partialSumsRdd = dataRDD.mapPartitions(iter => {
+      iter.map { case (indexFile, points) =>
+        indexFile -> new MergePointCount(points, indexFile).partialSum
+      }
+    })
+
+    val groupedSumRdd = partialSumsRdd.groupByKey()
+
+    val globalSumRdd = groupedSumRdd.mapValues(iter =>
+      iter.reduce { (sum1, sum2) =>
+        (sum1.keySet ++ sum2.keySet).map { pointId =>
+          pointId -> (sum1.getOrElse(pointId, 0) + sum2.getOrElse(pointId, 0))
+        }.toMap
+      }
+    )
+
+    val result = globalSumRdd.collect()
+
+    result.foreach { case (indexFile, combinedPartialSum) =>
+      println(s"For IndexFile $indexFile:")
+      combinedPartialSum.foreach { case (pointId, sum) =>
+        println(s"  Point $pointId: $sum")
+      }
+    }
+  }*/
 
 
 
@@ -140,19 +184,3 @@ class MergePartitionsResults(
 }
 
 
-/* Duplicate count issue:
-private def globalTopKScores(pTopK: Array[Array[Point]]): Unit = {
-  for (i <- 0 until nPartitions) {
-    for (j <- i + 1 until nPartitions) {
-      for {
-        p_i <- pTopK(i)
-        p_j <- pTopK(j)} {
-
-        if (p_i.dominates(p_j))
-          p_i.increaseDomScore(p_j.getDomScore + 1)
-        else if (p_j.dominates(p_i))
-          p_j.increaseDomScore(p_i.getDomScore + 1)
-      }
-    }
-  }
-}*/
