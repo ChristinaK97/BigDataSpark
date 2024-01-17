@@ -4,12 +4,14 @@ import FileHandler.IndexFile
 import Geometry.Point
 import TreeFunctions.RStarTree
 import org.apache.spark.SparkContext
+import org.apache.spark.rdd.RDD
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class MergePartitionsResults(
-  //sc: SparkContext,
+  sc: SparkContext,
+  decentralizedAggregation: Boolean,
   nDims: Int,             //partID, Skyline Points,    Partitions Top k,              Skylines Top k
   partitionsResults: Array[(String, ListBuffer[Point], mutable.PriorityQueue[Point], mutable.PriorityQueue[Point])],
   kForDataset: Int,
@@ -58,10 +60,10 @@ class MergePartitionsResults(
       pTopK = pTopK.map(partitionTopK => partitionTopK.filter(p => skylinePointsIDs.contains(p.getPointID)))
     }
 
-    //decentralizedGlobalTopKScores(pTopK)
-    centralizedGlobalTopKScores(pTopK)
-    globalTopKHeap(pTopK, k)
+    if(decentralizedAggregation) decentralizedGlobalTopKScores(pTopK)
+    else centralizedGlobalTopKScores(pTopK)
 
+    globalTopKHeap(pTopK, k)
   }
 
 
@@ -76,10 +78,47 @@ class MergePartitionsResults(
 
       indexFiles.foreach{case (partition_j_id, indexFile_j) =>
         if(!partition_i_id.equals(partition_j_id))
-          new MergePointCount(partition_i_topK, indexFile_j)
+          new MergePointCount(partition_i_topK, indexFile_j, false)
       }
     }
   }
+
+
+
+  private def decentralizedGlobalTopKScores(pTopK: Array[Array[Point]]): Unit = {
+
+    val dataSeq = ListBuffer[(String, ListBuffer[Point])]()
+    partitionIDs.foreach { partition_j_id =>
+      val otherPartitionsPoints = ListBuffer[Point]()
+
+      pTopK.zipWithIndex.foreach { case (partition_i_topK, i) =>
+        val partition_i_id = partitionIDs(i)
+        if (!partition_j_id.equals(partition_i_id))
+          otherPartitionsPoints.addAll(partition_i_topK)
+      }
+      dataSeq += ((partition_j_id, otherPartitionsPoints))
+    }
+    val dataRDD: RDD[(String, ListBuffer[Point])] = sc.parallelize(dataSeq.toSeq, nPartitions)
+
+    val partialSumsRdd = dataRDD.mapPartitions(iter => {
+      val (partitionID, points) = iter.next()
+      val indexFile = new IndexFile(false, partitionID)
+      Iterator(new MergePointCount(points, indexFile, true).partialSum.asInstanceOf[Map[Int, Int]])
+    })
+
+    val aggregatedSum = partialSumsRdd.reduce { (sum1, sum2) =>
+      (sum1.keySet ++ sum2.keySet).map { pointId =>
+        pointId -> (sum1.getOrElse(pointId, 0) + sum2.getOrElse(pointId, 0))
+      }.toMap
+    }
+
+    pTopK.foreach { partitionTopK =>
+      partitionTopK.foreach { p =>
+        p.increaseDomScore(aggregatedSum.getOrElse(p.getPointID, 0))
+      }
+    }
+  }
+
 
 
 
@@ -103,49 +142,7 @@ class MergePartitionsResults(
 
 
 
-  /*private def decentralizedGlobalTopKScores(pTopK: Array[Array[Point]]): Unit = {
-    val indexFiles: Map[String, IndexFile] = partitionIDs.map(partitionID =>
-      partitionID -> new IndexFile(false, partitionID)
-    ).toMap
 
-    val dataSeq = ListBuffer[(IndexFile, ListBuffer[Point])]()
-    indexFiles.foreach { case (partition_j_id, indexFile_j) =>
-      val otherPartitionsPoints = ListBuffer[Point]()
-
-      pTopK.zipWithIndex.foreach { case (partition_i_topK, i) =>
-        val partition_i_id = partitionIDs(i)
-        if (!partition_j_id.equals(partition_i_id))
-          otherPartitionsPoints.addAll(partition_i_topK)
-      }
-      dataSeq += ((indexFile_j, otherPartitionsPoints))
-    }
-    val dataRDD: RDD[(IndexFile, ListBuffer[Point])] = sc.parallelize(dataSeq.toSeq, nPartitions)
-
-    val partialSumsRdd = dataRDD.mapPartitions(iter => {
-      iter.map { case (indexFile, points) =>
-        indexFile -> new MergePointCount(points, indexFile).partialSum
-      }
-    })
-
-    val groupedSumRdd = partialSumsRdd.groupByKey()
-
-    val globalSumRdd = groupedSumRdd.mapValues(iter =>
-      iter.reduce { (sum1, sum2) =>
-        (sum1.keySet ++ sum2.keySet).map { pointId =>
-          pointId -> (sum1.getOrElse(pointId, 0) + sum2.getOrElse(pointId, 0))
-        }.toMap
-      }
-    )
-
-    val result = globalSumRdd.collect()
-
-    result.foreach { case (indexFile, combinedPartialSum) =>
-      println(s"For IndexFile $indexFile:")
-      combinedPartialSum.foreach { case (pointId, sum) =>
-        println(s"  Point $pointId: $sum")
-      }
-    }
-  }*/
 
 
 

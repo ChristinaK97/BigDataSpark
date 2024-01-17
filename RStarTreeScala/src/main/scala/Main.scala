@@ -28,6 +28,7 @@ object Main {
     val nPartitions = 4
     val kForDataset = 10
     val kForSkyline = 10
+    val decentralizedAggregation = true
 
     val conf = new SparkConf().setMaster("local[*]").setAppName("RStarTreeScala")
     val sc = new SparkContext(conf)
@@ -45,7 +46,7 @@ object Main {
       Iterator((partitionID.toString, skyline, topKPartition, topKSkyline))
     }.collect()
 
-    new MergePartitionsResults(nDims, partitionsResults, kForDataset, kForSkyline)
+    new MergePartitionsResults(sc, decentralizedAggregation, nDims, partitionsResults, kForDataset, kForSkyline)
 
     sc.stop()
   }
