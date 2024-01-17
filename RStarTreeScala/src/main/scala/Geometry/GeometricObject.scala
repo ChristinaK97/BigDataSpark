@@ -1,6 +1,6 @@
 package Geometry
 
-abstract class GeometricObject {
+abstract class GeometricObject extends Serializable {
 
   def L1: Double
 
