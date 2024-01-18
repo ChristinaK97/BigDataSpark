@@ -9,12 +9,13 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path, Paths}
 import scala.collection.mutable.ListBuffer
 
-class IndexFile(resetTree: Boolean, rTreeID: String) {
+class IndexFile(resetTree: Boolean, partitionId: String) {
 
   private val K: Int = UP_LIMIT / (16 * N + 4)
   private var BLOCK_CAPACITY: Int = 8 + 7 + K * (7 + 4 + 44 * N)
 
-  val PARTITION_DIR: Path = Paths.get(s"RTrees/RTreePartition_$rTreeID")
+  val partitionID: String = partitionId
+  val PARTITION_DIR: Path = Paths.get(s"RTrees/RTreePartition_$partitionId")
   private val INDEXFILE_PATH = Paths.get(s"$PARTITION_DIR/indexfile.txt").toString
   private val METADATA_PATH  = Paths.get(s"$PARTITION_DIR/metadata.txt").toString
 

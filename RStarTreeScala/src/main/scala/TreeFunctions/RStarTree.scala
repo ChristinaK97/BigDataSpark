@@ -17,8 +17,8 @@ class RStarTree(pointsPartition: Iterator[Point], nDims: Int) {
   private var logger: Logger = _
 
 
-  def createTree(rTreeID: String) : Unit = {
-    indexFile = new IndexFile(RESET_TREES, rTreeID)
+  def createTree(partitionID: String) : Unit = {
+    indexFile = new IndexFile(RESET_TREES, partitionID)
     logger = new Logger(indexFile.PARTITION_DIR)
     if(indexFile.getTreeWasReset)
       new CreateTree(indexFile, pointsPartition, logger)

@@ -6,12 +6,27 @@ import TreeStructure.TreeNode
 
 
 
-class MergePointCount(points: Iterable[Point], indexFile: IndexFile, decentralized: Boolean) {
+class MergePointCount(indexFile: IndexFile) {
 
+  private val thisPartitionID = indexFile.partitionID
   private val root = indexFile.retrieveNode(indexFile.getRootID)
-  val partialSum: Any =
-    if(decentralized) points.map(point => point.getPointID -> DecentralizedPointCount(root, point, 0)).toMap
-    else points.foreach(p => CentralizedPointCount(root, p))
+  var partialSum: Any = _
+
+  /** for centralized merge */
+  def this (points: Iterable[Point], indexFile: IndexFile) = {
+    this(indexFile)
+    points.foreach(p => CentralizedPointCount(root, p))
+  }
+
+  /** for distributed merge with broadcasting all topK lists */
+  def this(points: Array[(String, Point)], indexFile: IndexFile) = {
+    this(indexFile)
+    partialSum = points.map { case (pointPartitionID, point) =>
+      point.getPointID ->
+        (if (pointPartitionID.equals(thisPartitionID)) 0
+        else DecentralizedPointCount(root, point, 0))
+    }.toMap
+  }
 
 
   private def CentralizedPointCount(node: TreeNode, point: Point): Unit = {

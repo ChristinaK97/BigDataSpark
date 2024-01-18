@@ -4,7 +4,7 @@ import FileHandler.IndexFile
 import Geometry.Point
 import TreeFunctions.RStarTree
 import org.apache.spark.SparkContext
-import org.apache.spark.rdd.RDD
+import org.apache.spark.broadcast.Broadcast
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -78,7 +78,7 @@ class MergePartitionsResults(
 
       indexFiles.foreach{case (partition_j_id, indexFile_j) =>
         if(!partition_i_id.equals(partition_j_id))
-          new MergePointCount(partition_i_topK, indexFile_j, false)
+          new MergePointCount(partition_i_topK, indexFile_j)
       }
     }
   }
@@ -87,26 +87,24 @@ class MergePartitionsResults(
 
   private def decentralizedGlobalTopKScores(pTopK: Array[Array[Point]]): Unit = {
 
-    val dataSeq = ListBuffer[(String, ListBuffer[Point])]()
-    partitionIDs.foreach { partition_j_id =>
-      val otherPartitionsPoints = ListBuffer[Point]()
-
-      pTopK.zipWithIndex.foreach { case (partition_i_topK, i) =>
+    val allTopK: Array[(String, Point)] =
+      pTopK.zipWithIndex.flatMap{ case (partition_i_topK, i) =>
         val partition_i_id = partitionIDs(i)
-        if (!partition_j_id.equals(partition_i_id))
-          otherPartitionsPoints.addAll(partition_i_topK)
+        partition_i_topK.map(point => partition_i_id -> point)
       }
-      dataSeq += ((partition_j_id, otherPartitionsPoints))
-    }
-    val dataRDD: RDD[(String, ListBuffer[Point])] = sc.parallelize(dataSeq.toSeq, nPartitions)
 
-    val partialSumsRdd = dataRDD.mapPartitions(iter => {
-      val (partitionID, points) = iter.next()
+    val allTopKBroadcast: Broadcast[Array[(String, Point)]] = sc.broadcast(allTopK)
+    val partitionIDsRDD = sc.parallelize(partitionIDs, nPartitions)
+
+    val partialSumRDD = partitionIDsRDD.mapPartitions(iter => {
+      val partitionID: String = iter.next()
       val indexFile = new IndexFile(false, partitionID)
-      Iterator(new MergePointCount(points, indexFile, true).partialSum.asInstanceOf[Map[Int, Int]])
+      Iterator(
+        new MergePointCount(allTopKBroadcast.value, indexFile).partialSum.asInstanceOf[Map[Int, Int]]
+      )
     })
 
-    val aggregatedSum = partialSumsRdd.reduce { (sum1, sum2) =>
+    val aggregatedSum = partialSumRDD.reduce { (sum1, sum2) =>
       (sum1.keySet ++ sum2.keySet).map { pointId =>
         pointId -> (sum1.getOrElse(pointId, 0) + sum2.getOrElse(pointId, 0))
       }.toMap
