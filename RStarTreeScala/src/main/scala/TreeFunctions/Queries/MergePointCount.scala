@@ -24,7 +24,7 @@ class MergePointCount(indexFile: IndexFile) {
     partialSum = points.map { case (pointPartitionID, point) =>
       point.getPointID ->
         (if (pointPartitionID.equals(thisPartitionID)) 0
-        else DecentralizedPointCount(root, point, 0))
+        else DistributedPointCount(root, point, 0))
     }.toMap
   }
 
@@ -42,12 +42,12 @@ class MergePointCount(indexFile: IndexFile) {
   }
 
 
-  private def DecentralizedPointCount(node: TreeNode, point: Point, sum: Int): Int = {
+  private def DistributedPointCount(node: TreeNode, point: Point, sum: Int): Int = {
     node.foldLeft(sum) { (acc, nodeEntry) =>
 
       if (!node.isLeaf && hasPartialDom(nodeEntry.asInstanceOf[Rectangle], point)) {
         val childID = nodeEntry.asInstanceOf[Rectangle].getChildID
-        DecentralizedPointCount(indexFile.retrieveNode(childID), point, acc)
+        DistributedPointCount(indexFile.retrieveNode(childID), point, acc)
 
       } else if (point.dominates(nodeEntry))
         acc + nodeEntry.getCount

@@ -11,7 +11,7 @@ import scala.collection.mutable.ListBuffer
 
 class MergePartitionsResults(
   sc: SparkContext,
-  decentralizedAggregation: Boolean,
+  distributedAggregation: Boolean,
   nDims: Int,             //partID, Skyline Points,    Partitions Top k,              Skylines Top k
   partitionsResults: Array[(String, ListBuffer[Point], mutable.PriorityQueue[Point], mutable.PriorityQueue[Point])],
   kForDataset: Int,
@@ -60,7 +60,7 @@ class MergePartitionsResults(
       pTopK = pTopK.map(partitionTopK => partitionTopK.filter(p => skylinePointsIDs.contains(p.getPointID)))
     }
 
-    if(decentralizedAggregation) decentralizedGlobalTopKScores(pTopK)
+    if(distributedAggregation) distributedGlobalTopKScores(pTopK)
     else centralizedGlobalTopKScores(pTopK)
 
     globalTopKHeap(pTopK, k)
@@ -85,7 +85,7 @@ class MergePartitionsResults(
 
 
 
-  private def decentralizedGlobalTopKScores(pTopK: Array[Array[Point]]): Unit = {
+  private def distributedGlobalTopKScores(pTopK: Array[Array[Point]]): Unit = {
 
     val allTopK: Array[(String, Point)] =
       pTopK.zipWithIndex.flatMap{ case (partition_i_topK, i) =>
