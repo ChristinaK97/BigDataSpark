@@ -12,28 +12,45 @@ import scala.collection.mutable.ListBuffer
 class MergePartitionsResults(
   sc: SparkContext,
   distributedAggregation: Boolean,
-  nDims: Int,             //partID, Skyline Points,    Partitions Top k,              Skylines Top k
-  partitionsResults: Array[(String, ListBuffer[Point], mutable.PriorityQueue[Point], mutable.PriorityQueue[Point])],
+  nDims: Int,             //partID, Skyline Points,    Partitions Top k,             Skylines Top k
+  partitionsResults: Array[(String, ListBuffer[Point], mutable.PriorityQueue[Point], mutable.PriorityQueue[Point],
+               //Tree(start, end), 3 types of queries (start, end)
+                     (Long, Long), List[(Long, Long)])],
   kForDataset: Int,
   kForSkyline: Int
 ){
 
   private val nPartitions = partitionsResults.length
   private var partitionIDs: Array[String] = _
-  mergeResults()
 
-  private def mergeResults(): Unit = {
+
+  def mergeResults(): (Long, Long, Long) = {
     partitionIDs = partitionsResults.map(_._1)
     val skylines:       Array[ListBuffer[Point]] = partitionsResults.map(_._2)
     val partitionsTopK: Array[mutable.PriorityQueue[Point]] = partitionsResults.map(_._3)
     val skylinesTopK:   Array[mutable.PriorityQueue[Point]] = partitionsResults.map(_._4)
 
-    val datasetSkyline = mergeSkylineResults(skylines)
-    val datasetTopK = mergeTopKResults(partitionsTopK, kForDataset, null)
-    val skylineTopK = mergeTopKResults(skylinesTopK, kForSkyline, datasetSkyline)
+    val startMergeSkyline = System.nanoTime()
+    /*Q1*/val datasetSkyline = mergeSkylineResults(skylines)
+    val endMergeSkyline = System.nanoTime()
+    val mergeSkylineTime = endMergeSkyline - startMergeSkyline
+
+    val startMergeTopK = System.nanoTime()
+    /*Q2*/val datasetTopK = mergeTopKResults(partitionsTopK, kForDataset, null)
+    val endMergeTopK = System.nanoTime()
+    val mergeTopKTime = endMergeTopK - startMergeTopK
+
+
+    val startMergeSkyTopK = System.nanoTime()
+    /*Q3*/val skylineTopK = mergeTopKResults(skylinesTopK, kForSkyline, datasetSkyline)
+    val endMergeSkyTopK = System.nanoTime()
+    val mergeSkyTopKTime = endMergeSkyTopK - startMergeSkyTopK
 
     printResults(datasetSkyline, datasetTopK, skylineTopK)
+    (mergeSkylineTime, mergeTopKTime, mergeSkyTopKTime)
   }
+
+
 
 // MERGE SKYLINE RESULTS -----------------------------------------------------------------------------------------------
 

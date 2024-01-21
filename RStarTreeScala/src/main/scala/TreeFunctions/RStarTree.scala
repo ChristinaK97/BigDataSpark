@@ -17,33 +17,50 @@ class RStarTree(pointsPartition: Iterator[Point], nDims: Int) {
   private var logger: Logger = _
 
 
-  def createTree(partitionID: String) : Unit = {
+  def createTree(partitionID: String) : (Long, Long) = {
+    var startTime: Long = 0L
+    var endTime: Long = 0L
     indexFile = new IndexFile(RESET_TREES, partitionID)
     logger = new Logger(indexFile.PARTITION_DIR)
-    if(indexFile.getTreeWasReset)
+    if(indexFile.getTreeWasReset) {
+      startTime = System.nanoTime()
       new CreateTree(indexFile, pointsPartition, logger)
+      endTime = System.nanoTime()
+    }
     if(DEBUG) validateDataConsistency()
+    (startTime, endTime)
   }
 
 
 /* Ερωτήματα: Υπολογισμός skyline στο dataset και top k ------------------------------------------------------------- */
 
-  def runQueries(kForDataset: Int, kForSkyline: Int): (ListBuffer[Point], mutable.PriorityQueue[Point], mutable.PriorityQueue[Point])  = {
+  def runQueries(kForDataset: Int, kForSkyline: Int): (ListBuffer[Point], mutable.PriorityQueue[Point], mutable.PriorityQueue[Point], List[(Long, Long)])  = {
     // partition skyline
     logger.info("-"*100 + "\nCompute Skyline\n" + "-"*100)
-    val skyline = new SkylineBBS(indexFile, logger).BranchAndBound()
+    val startSkyline = System.nanoTime()
+    /*Q1*/val skyline = new SkylineBBS(indexFile, logger).BranchAndBound()
+    val endSkyline = System.nanoTime()
 
     // top k from skyline points
     logger.info("-"*100 + s"\nCompute Skyline Top${kForSkyline}\n" + "-"*100)
-    val topKSkyline = new SkylineTopK(indexFile, skyline, kForSkyline, logger).SimpleCountGuidedAlgorithm()
+    val startSkyTopK = System.nanoTime()
+    /*Q3*/val topKSkyline = new SkylineTopK(indexFile, skyline, kForSkyline, logger).SimpleCountGuidedAlgorithm()
+    val endSkyTopK = System.nanoTime()
 
     // top k from the whole partition
     logger.info("-"*100 + s"\nCompute Partition Top${kForDataset}\n" + "-"*100)
-    val topKPartition = new TopK(indexFile, kForDataset, logger).SimpleCountGuidedAlgorithm()
+    val startTopK = System.nanoTime()
+    /*Q2*/val topKPartition = new TopK(indexFile, kForDataset, logger).SimpleCountGuidedAlgorithm()
+    val endTopK = System.nanoTime()
+
+    val times = List[(Long, Long)](
+      (startSkyline, endSkyline), (startTopK, endTopK), (startSkyTopK, endSkyTopK))
+
     (
       skyline.map{case (p,_) => p},
       topKPartition,
-      topKSkyline
+      topKSkyline,
+      times
     )
   }
 
