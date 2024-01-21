@@ -55,7 +55,7 @@ object SimpleSkylineCalculation {
 
     val end_skyline = System.nanoTime()
     val duration_skyline = (end_skyline - start_skyline) / 1e9d
-    println(s"Execution time for Skyline Calculation: $duration_skyline sec")
+    println(s"------------------------------------>Execution time for Skyline Calculation: $duration_skyline sec")
 
     // Collect and print the Skyline
     skyline.collect().foreach(point => println(point.dimensions.mkString(",")))
@@ -82,7 +82,7 @@ object SimpleSkylineCalculation {
 
     val end_topk = System.nanoTime()
     val duration_topk = (end_topk - start_topk) / 1e9d
-    println(s"Execution time for Top-K Calculation: $duration_topk sec")
+    println(s"------------------------------------>Execution time for Top-K Calculation: $duration_topk sec")
 
 
     // Print the top k points with their dominance scores
@@ -110,7 +110,7 @@ object SimpleSkylineCalculation {
 
     val end_stopk = System.nanoTime()
     val duration_stopk = (end_stopk - start_stopk) / 1e9d
-    println(s"Execution time for Skyline Top-K Calculation: $duration_stopk sec")
+    println(s"------------------------------------>Execution time for Skyline Top-K Calculation: $duration_stopk sec")
 
     // Print the top k skyline points with their dominance scores
     topKSkylinePoints.foreach { case (point, score) =>
