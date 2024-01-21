@@ -41,7 +41,10 @@ object SimpleSkylineCalculation {
 
     // Read from the file and create an RDD of Points.
     val pointsRDD: RDD[Point] = sc.textFile(filePath)
-      .map(line => Point(line.split(",").map(_.toDouble).toList))
+                                  .zipWithIndex()        // Pair each line with its index
+                                  .filter(_._2 > 0)      // Skip the first line (index 0)
+                                  .map(_._1)             // Keep only the line content
+                                  .map(line => Point(line.split(",").map(_.toDouble).toList))
 
     // Compute Skyline
     val skyline: RDD[Point] = computeSkyline(pointsRDD,spark)
