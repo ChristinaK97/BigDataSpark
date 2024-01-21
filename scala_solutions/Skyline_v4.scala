@@ -42,6 +42,7 @@ object SimpleSkylineCalculation {
 
 
     println("=================Skyline Calculation=================")
+    val start_skyline = System.nanoTime()
     // Read from the file and create an RDD of Points.
     val pointsRDD: RDD[Point] = sc.textFile(filePath)
                                   .zipWithIndex()        // Pair each line with its index
@@ -52,10 +53,15 @@ object SimpleSkylineCalculation {
     // Compute Skyline
     val skyline: RDD[Point] = computeSkyline(pointsRDD,spark)
 
+    val end_skyline = System.nanoTime()
+    val duration_skyline = (end_skyline - start_skyline) / 1e9d
+    println(s"Execution time for Skyline Calculation: $duration_skyline sec")
+
     // Collect and print the Skyline
     skyline.collect().foreach(point => println(point.dimensions.mkString(",")))
-
     println("=================Top-K Calculation=================")
+
+    val start_topk = System.nanoTime()
 
     // Broadcast the points as a list to each node
     val pointsList = spark.sparkContext.broadcast(pointsRDD.collect().toList)
@@ -74,6 +80,11 @@ object SimpleSkylineCalculation {
       .sortBy(_._2, ascending = false)
       .take(k)
 
+    val end_topk = System.nanoTime()
+    val duration_topk = (end_topk - start_topk) / 1e9d
+    println(s"Execution time for Top-K Calculation: $duration_topk sec")
+
+
     // Print the top k points with their dominance scores
     topKPoints.foreach { case (point, score) =>
       println(s"Point: ${point.dimensions.mkString(",")}, Score: $score")
@@ -81,16 +92,25 @@ object SimpleSkylineCalculation {
 
     println("=================Skyline Top-K Calculation=================")
 
+    val start_stopk = System.nanoTime()
+
     // Compute dominance scores only for the skyline points
     val skylineDominanceScoresRDD: RDD[(Point, Int)] = skyline.map { skypoint =>
       val score = pointsList.value.count(otherPoint => dominates(skypoint, otherPoint))
       (skypoint, score)
     }
 
+    // Get the value of k from args or use a default value
+    val sk_k = if (args.length > 1) args(1).toInt else 10 // For example, default is 10
+
     // Get top k skyline points with the highest dominance scores
     val topKSkylinePoints: Array[(Point, Int)] = skylineDominanceScoresRDD
       .sortBy(_._2, ascending = false)
-      .take(k)
+      .take(sk_k)
+
+    val end_stopk = System.nanoTime()
+    val duration_stopk = (end_stopk - start_stopk) / 1e9d
+    println(s"Execution time for Skyline Top-K Calculation: $duration_stopk sec")
 
     // Print the top k skyline points with their dominance scores
     topKSkylinePoints.foreach { case (point, score) =>
