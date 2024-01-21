@@ -58,9 +58,15 @@ def generate_correlated_data_points(rho, num_points, num_dimensions, seed):
 def generate_anticorrelated_data_points(rho, num_points, num_dimensions, seed):
     """
     Generate anticorrelated data points.
+    This function ensures the covariance matrix for anticorrelation is positive semi-definite before trying to draw samples from it. 
+    The added assertion ensures `rho` is in an acceptable range before constructing the covariance matrix. 
+    Also, the value check with `np.linalg.eigvalsh` ensures that the matrix is indeed positive semi-definite.
+
+    Please note that when dealing with anticorrelation, the permissible values of `rho` are more constrained compared to the correlation case, 
+    since the off-diagonal values can't be too negative without violating the positive semi-definiteness condition.
 
     Parameters:
-        rho (float): Correlation coefficient (negative for anticorrelation).
+        rho (float): Correlation coefficient (positive value expected for anticorrelation).
         num_points (int): Number of data points to generate.
         num_dimensions (int): Number of dimensions for each data point.
         seed (int): Random seed for reproducibility.
@@ -68,7 +74,20 @@ def generate_anticorrelated_data_points(rho, num_points, num_dimensions, seed):
     Returns:
         np.ndarray: Generated data points.
     """
-    return generate_correlated_data_points(-rho, num_points, num_dimensions, seed)
+    np.random.seed(seed)
+
+    assert 0 <= rho < 1/(num_dimensions-1), "rho must be in [0, 1/(num_dimensions-1)) for positive semi-definiteness."
+
+    mean = np.zeros(num_dimensions)
+    anticorr_matrix = np.eye(num_dimensions) - rho * (np.ones((num_dimensions, num_dimensions)) - np.eye(num_dimensions))
+    print(anticorr_matrix)
+  
+    # Ensuring the matrix is positive semi-definite
+    eigenvalues = np.linalg.eigvalsh(anticorr_matrix)
+    if np.any(eigenvalues <= 0):
+        raise ValueError("The generated covariance matrix is not positive semi-definite.")
+
+    return np.random.multivariate_normal(mean, anticorr_matrix, size=num_points)
 
 def write_to_csv(data_points, output_file):
     """
