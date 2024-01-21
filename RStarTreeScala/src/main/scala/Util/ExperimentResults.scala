@@ -1,8 +1,5 @@
 package Util
 
-import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
-import io.circe.{Decoder, Encoder}
-
 case class ExperimentResults(
                                 distribution: String,
                                 dataSize: Long,
@@ -18,8 +15,3 @@ case class ExperimentResults(
                                 totalSkyTopKTime: Double,
                                 mergeSkyTopKTime: Double
 )
-
-object ExperimentResults {
-  implicit val encoder: Encoder[ExperimentResults] = deriveEncoder
-  implicit val decoder: Decoder[ExperimentResults] = deriveDecoder
-}

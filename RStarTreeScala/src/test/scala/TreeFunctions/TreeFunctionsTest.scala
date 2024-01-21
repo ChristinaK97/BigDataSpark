@@ -36,9 +36,16 @@ object TreeFunctionsTest {
     val dataPath = "C:/Users/karal/progr/Scala/BigDataSpark/dist_generator/uniform.csv"
     val points: Iterable[Point] = readPointsFromCSV(dataPath)
     val nDims = points.head.nDims
+    val start = System.nanoTime()
     val rTree = new RStarTree(points.iterator, nDims)
-    rTree.createTree(0)
-    rTree.runQueries(10, 10)
+    rTree.createTree("0")
+    val end = System.nanoTime()
+    val totalTreeCreationTime = (end-start).toDouble  / 1e9
+    println(s"\nTotal aR*Trees creation time =\t $totalTreeCreationTime")
+    val(_,_,_, times) = rTree.runQueries(10, 10)
+    times.foreach{case (start, end) =>
+      println((end-start).toDouble / 1e9)
+    }
     rTree.close()
   }
 }

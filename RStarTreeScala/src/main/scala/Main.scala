@@ -26,7 +26,7 @@ object Main {
   def main(args: Array[String]): Unit = {
     // Declare variables with default values
     var dataPath = "file:///C:/Users/karal/progr/Scala/BigDataSpark/dist_generator/uniform.csv"
-    var nPartitions = 1
+    var nPartitions = 4
     var kForDataset = 10
     var kForSkyline = 10
 

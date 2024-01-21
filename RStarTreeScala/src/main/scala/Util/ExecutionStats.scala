@@ -1,7 +1,7 @@
 package Util
 
 import Geometry.Point
-import io.circe.syntax.EncoderOps
+import org.apache.hadoop.shaded.com.google.gson.{Gson, GsonBuilder}
 
 import java.nio.file.{Files, Paths}
 import scala.collection.mutable
@@ -89,9 +89,10 @@ class ExecutionStats(
       totalSkyTopKTime,
       mergeSkyTopKTime
     )
-    val jsonResults: String = result.asJson.spaces4
-    Files.write(jsonPath, jsonResults.getBytes)
 
+    val gson: Gson = new GsonBuilder().setPrettyPrinting().create()
+    val jsonResults: String = gson.toJson(result)
+    Files.write(jsonPath, jsonResults.getBytes)
   }
 
 
