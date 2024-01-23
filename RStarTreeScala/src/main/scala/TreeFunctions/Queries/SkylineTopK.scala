@@ -26,7 +26,7 @@ class SkylineTopK(indexFile: IndexFile, sky: ListBuffer[(Point, Int)], k: Int, l
       skyPointsIDs.add(p.getPointID)
       if(!pathForLeafWasCalculated.contains(leafID)) {
         pathForLeafWasCalculated.add(leafID)
-        val path = travelTree(p, leafID, ListBuffer[(Int,Int)](), root)
+        val path = travelTree(p, leafID, ListBuffer[(Int,Int)](), root)                                                                       //logger.info(s"psky = ${p.serialize}\t$path")
         path.foreach{case (nodeID, entryIndex) =>
           if(entriesWithSkyPoints.contains(nodeID))
             entriesWithSkyPoints(nodeID) += entryIndex
@@ -54,6 +54,10 @@ class SkylineTopK(indexFile: IndexFile, sky: ListBuffer[(Point, Int)], k: Int, l
   }
 
 // ---------------------------------------------------------------------------------------------------------------------
+
+  override def setK(): Int =
+    k.min(sky.size)
+
 
   override def updateTravelMaxHeap(node: TreeNode): Unit = {
     if(entriesWithSkyPoints.contains(node.getNodeID)) {

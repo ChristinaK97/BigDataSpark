@@ -11,6 +11,7 @@ import scala.collection.mutable.ListBuffer
 
 class TopK(indexFile: IndexFile, k: Int, logger: Logger) {
 
+  var kVar: Int = setK()                                                                                                ; if(DEBUG_TOPK) logger.info(s"New k = $kVar")
   val root: TreeNode = indexFile.retrieveNode(indexFile.getRootID)
 
   /** Σωρός διάσχισης. Κορυφή είναι το rectangle με το upper bound dom score, δηλ
@@ -56,8 +57,7 @@ class TopK(indexFile: IndexFile, k: Int, logger: Logger) {
     else {                                                                         /*2*/
       updateTravelMaxHeap(root)                                                    /*3*/
 
-      while (travelMaxHeap.nonEmpty &&
-             travelMaxHeap.head.getDomScore >= kthScore) {                        /*4*/
+      while (continueSearch()) {                                            /*4*/
         val maxMBR: Rectangle   = travelMaxHeap.dequeue()                         /*5*/
         val childNode: TreeNode = indexFile.retrieveNode(maxMBR.getChildID)       /*6*/                                 ; if(DEBUG_TOPK) logger.info(s"\n# travelMaxHeap = ${travelMaxHeap.size+1}\n\tPop ${maxMBR.toString}\tpm.domScore = ${maxMBR.getDomScore}\tcount = ${maxMBR.getCount}\t childID = [${maxMBR.getChildID}]\n\tchildNode id = [${childNode.getNodeID}]\tisLeaf? ${childNode.isLeaf}\t # entries = ${childNode.getNumberOfEntries}\t [${childNode.getNodeID}].SCount = ${childNode.getSCount}")
         BatchCount(root, childNode)
@@ -68,8 +68,16 @@ class TopK(indexFile: IndexFile, k: Int, logger: Logger) {
           updateTravelMaxHeap(childNode)                                                                                ; if(DEBUG_TOPK) logger.info(s"\tAdd # entries = ${childNode.getNumberOfEntries} to travelMaxHeap")
       }
     }//end root isa NonLeaf
-    logger.info(toString)
+    logger.info(toString)                                                                                               ; if (DEBUG_TOPK) logger.info(s"travelMaxHeap.size = ${travelMaxHeap.size}\t travel.head = ${if (travelMaxHeap.nonEmpty) travelMaxHeap.head.getDomScore else "empty"} \t k-th score = ${topKMinHeap.head.getDomScore}")
     topKMinHeap
+  }
+
+  def setK(): Int =
+    k.min(indexFile.getNumOfPoints)
+
+
+  private def continueSearch(): Boolean = {
+    travelMaxHeap.nonEmpty && (topKMinHeap.size < kVar || travelMaxHeap.head.getDomScore >= kthScore)
   }
 
 
@@ -98,7 +106,7 @@ class TopK(indexFile: IndexFile, k: Int, logger: Logger) {
 
 
   def addPointToTopKMinHeap(p:Point): Unit = {
-    if(topKMinHeap.size < k) {                                    /*1*/
+    if(topKMinHeap.size < kVar) {                                    /*1*/
       topKMinHeap.enqueue(p)                                                                                            ;  if(DEBUG_TOPK) logger.info(s"\t\ttopK.size=${topKMinHeap.size-1} < k \t topK.add(${p.toString} ,\t${p.getDomScore})")
     } else if( topKOrdering.compare(p, topKMinHeap.head) < 0 ) {  /*2*/                                                 ;  if(DEBUG_TOPK) logger.info(s"\t\ttopK full\t [${p.getPointID}].domScore=${p.getDomScore} > [${topKMinHeap.head.getPointID}].domScore=${topKMinHeap.head.getDomScore}\t topK.add(${p.toString} ,\t${p.getDomScore})")
       topKMinHeap.dequeue()
