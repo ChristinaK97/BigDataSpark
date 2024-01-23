@@ -33,17 +33,17 @@ class SkylineBBS(indexFile: IndexFile, logger: Logger) {
    *    3. Βγάλε την κεφαλή -> geoObj που έχει την ελάχιστη απόσταση από την αρχή των αξόνων σε σχέση με
    *       όλα που έχουν παρατηρηθεί μέχρι τώρα
    *    4. Αν το minEntry είναι:
-   *       5. Point: αυτό ανήκει σίγουρα στο skyline
+   *       5. Point: αν δεν κυριαρχειται από καποιο σημειο της skyline, ανήκει στο skyline
    *       6. Rectangle: Θα πρέπει να το προσπελάσω, δηλαδή να εξετάσω το child node του
    *          Τα entries που child node προστίθονται στο heap, αν ικανοποιούν τα Κ1, Κ2
    */
   def BranchAndBound(): ListBuffer[(Point, Int)] = {
     addToHeap(indexFile.retrieveNode(rootID))                                        //1
     while(heap.nonEmpty) {                                                           //2
-      val (minEntry: GeometricObject, nodeID: Int, l1: Double) = heap.dequeue()                   /*3*/                              ;if(DEBUG_SKY) logger.info(s"\nL1 = $l1 \t  ${minEntry.serialize}")
+      val (minEntry: GeometricObject, nodeID: Int, l1: Double) = heap.dequeue()     /*3*/                               ;if(DEBUG_SKY) logger.info(s"\nL1 = $l1 \t  ${minEntry.serialize}")
 
       minEntry match {                                                              //4
-        case p: Point     => sky += ((p, nodeID))                          /*5*/                                         ;if(DEBUG_SKY) logger.info(s"Add to skyline \t < ${p.serialize} > \t # skyline = ${sky.length}")
+        case p: Point     => if(!isDominatedBySky(p)) sky += ((p, nodeID))          /*5*/                               ;if(DEBUG_SKY) logger.info(s"Add to skyline \t < ${p.serialize} > \t # skyline = ${sky.length}")
         case r: Rectangle => addToHeap(indexFile.retrieveNode(r.getChildID))        //6
       }
     }/*end while not empty*/
@@ -117,7 +117,7 @@ class SkylineBBS(indexFile: IndexFile, logger: Logger) {
 
 
 
-//======================================================================================================================
+  //======================================================================================================================
   override def toString: String = {
     val sb: StringBuilder = new StringBuilder()
     sb.append(s"\nSkyline Results :\n\t# points = ${sky.length}\n\t")
