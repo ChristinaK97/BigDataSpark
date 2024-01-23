@@ -1,5 +1,8 @@
 package Util
 
+import java.io.File
+import java.nio.file.Paths
+
 object Constants {
   var N: Int = -1
   val sizeOfDouble: Int = 8
@@ -15,4 +18,25 @@ object Constants {
   val DEBUG: Boolean = false
   val DEBUG_SKY = false
   val DEBUG_TOPK = false
+}
+
+
+object DirectoryDeletion {
+  def deleteDirectory(directoryPath: String): Unit = {
+    val directory = new File(Paths.get(directoryPath).toString)
+
+    val files = Option(directory.listFiles())
+
+    files.foreach { fileList =>
+      fileList.foreach { file =>
+        if (file.isDirectory)
+          deleteDirectory(file.getAbsolutePath)
+        else if (!file.delete())
+            System.err.println(s"Failed to delete file: ${file.getAbsolutePath}")
+      }
+    }
+    if (!directory.delete()) {
+      System.err.println(s"Failed to delete directory: ${directory.getAbsolutePath}")
+    }
+  }
 }

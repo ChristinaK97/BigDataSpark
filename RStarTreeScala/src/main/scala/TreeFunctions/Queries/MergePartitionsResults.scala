@@ -20,7 +20,7 @@ class MergePartitionsResults(
   kForSkyline: Int
 ){
 
-  private val nPartitions = partitionsResults.length
+  private val nPartitions = partitionsResults.length                                                                    ; println("Executors completed")
   private var partitionIDs: Array[String] = _
 
 
@@ -30,18 +30,19 @@ class MergePartitionsResults(
     val partitionsTopK: Array[mutable.PriorityQueue[Point]] = partitionsResults.map(_._3)
     val skylinesTopK:   Array[mutable.PriorityQueue[Point]] = partitionsResults.map(_._4)
 
-    val startMergeSkyline = System.nanoTime()
+
+    val startMergeSkyline = System.nanoTime()                                                                           ; println("Aggregating skyline...")
     /*Q1*/val datasetSkyline = mergeSkylineResults(skylines)
     val endMergeSkyline = System.nanoTime()
     val mergeSkylineTime = endMergeSkyline - startMergeSkyline
 
-    val startMergeTopK = System.nanoTime()
+    val startMergeTopK = System.nanoTime()                                                                              ; println("Aggregating top-k...")
     /*Q2*/val datasetTopK = mergeTopKResults(partitionsTopK, kForDataset, null)
     val endMergeTopK = System.nanoTime()
     val mergeTopKTime = endMergeTopK - startMergeTopK
 
 
-    val startMergeSkyTopK = System.nanoTime()
+    val startMergeSkyTopK = System.nanoTime()                                                                           ; println("Aggregating skyline top-k...")
     /*Q3*/val skylineTopK = mergeTopKResults(skylinesTopK, kForSkyline, datasetSkyline)
     val endMergeSkyTopK = System.nanoTime()
     val mergeSkyTopKTime = endMergeSkyTopK - startMergeSkyTopK

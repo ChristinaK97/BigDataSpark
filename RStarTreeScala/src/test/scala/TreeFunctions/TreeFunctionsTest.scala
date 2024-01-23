@@ -33,7 +33,7 @@ object TreeFunctionsTest {
 
 
   def main(args: Array[String]): Unit = {
-    val dataPath = "C:/Users/karal/progr/Scala/BigDataSpark/dist_generator/uniform.csv"
+    val dataPath = "C:/Users/karal/progr/Scala/BigDataSpark/dist_generator/uniform_large.csv"
     val points: Iterable[Point] = readPointsFromCSV(dataPath)
     val nDims = points.head.nDims
     val start = System.nanoTime()

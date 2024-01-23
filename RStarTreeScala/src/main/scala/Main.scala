@@ -1,6 +1,8 @@
 import Geometry.Point
 import TreeFunctions.Queries.MergePartitionsResults
 import TreeFunctions.RStarTree
+import Util.Constants.RESET_TREES
+import Util.DirectoryDeletion.deleteDirectory
 import Util.ExecutionStats
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
@@ -25,7 +27,7 @@ object Main {
 
   def main(args: Array[String]): Unit = {
     // Declare variables with default values
-    var dataPath = "file:///C:/Users/karal/progr/Scala/BigDataSpark/dist_generator/uniform.csv"
+    var dataPath = "file:///C:/Users/karal/progr/Scala/BigDataSpark/dist_generator/uniform_large.csv"
     var nPartitions = 4
     var kForDataset = 10
     var kForSkyline = 10
@@ -42,6 +44,9 @@ object Main {
 
     val conf = new SparkConf().setMaster("local[*]").setAppName("RStarTreeScala")
     val sc = new SparkContext(conf)
+
+    if(RESET_TREES)
+      deleteDirectory("RTrees")
 
     val (pointsRDD, nDims) = readPointsRDD(sc, dataPath)
     val repartitionedRDD = pointsRDD.repartition(nPartitions)

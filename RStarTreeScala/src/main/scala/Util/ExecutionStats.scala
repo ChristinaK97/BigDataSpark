@@ -72,7 +72,7 @@ class ExecutionStats(
 
   private def writeToJSON(): Unit = {
     val jsonFile = s"${distribution}_N${dataSize}_D${nDims}_P${nPartitions}_Dk${kForDataset}_Sk${kForSkyline}.json"
-    val jsonPath = Paths.get(s"Results/$distribution/$jsonFile")
+    val jsonPath = Paths.get(s"Results/$jsonFile")
     Files.createDirectories(jsonPath.getParent) // Create parent directories if not exists
     val result = ExperimentResults(
       distribution,
