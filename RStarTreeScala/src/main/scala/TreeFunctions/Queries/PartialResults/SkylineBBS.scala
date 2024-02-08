@@ -1,4 +1,4 @@
-package TreeFunctions.Queries
+package TreeFunctions.Queries.PartialResults
 
 import FileHandler.IndexFile
 import Geometry.{GeometricObject, Point, Rectangle}

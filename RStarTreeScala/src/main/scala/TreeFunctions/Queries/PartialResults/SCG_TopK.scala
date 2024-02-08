@@ -1,4 +1,4 @@
-package TreeFunctions.Queries
+package TreeFunctions.Queries.PartialResults
 
 import FileHandler.IndexFile
 import Geometry.{GeometricObject, Point, Rectangle}
@@ -9,7 +9,7 @@ import Util.Logger
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class TopK(indexFile: IndexFile, k: Int, logger: Logger) {
+class SCG_TopK(indexFile: IndexFile, k: Int, logger: Logger) {
 
   var kVar: Int = setK()                                                                                                ; if(DEBUG_TOPK) logger.info(s"New k = $kVar")
   val root: TreeNode = indexFile.retrieveNode(indexFile.getRootID)

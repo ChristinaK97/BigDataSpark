@@ -1,4 +1,4 @@
-package TreeFunctions.Queries
+package TreeFunctions.Queries.PartialResults
 
 import FileHandler.IndexFile
 import Geometry.{GeometricObject, Point, Rectangle}
@@ -9,8 +9,8 @@ import Util.Logger
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class SkylineTopK(indexFile: IndexFile, sky: ListBuffer[(Point, Int)], k: Int, logger: Logger)
-  extends TopK(indexFile, k, logger) {
+class SCG_Skyline_TopK(indexFile: IndexFile, sky: ListBuffer[(Point, Int)], k: Int, logger: Logger)
+  extends SCG_TopK(indexFile, k, logger) {
 
   private val entriesWithSkyPoints = mutable.HashMap[Int, mutable.HashSet[Int]]()
   private val skyPointsIDs = mutable.HashSet[Int]()

@@ -1,4 +1,4 @@
-package TreeFunctions.Queries
+package TreeFunctions.Queries.GlobalResults
 
 import FileHandler.IndexFile
 import Geometry.{Point, Rectangle}
@@ -6,19 +6,19 @@ import TreeStructure.TreeNode
 
 
 
-class MergePointCount(indexFile: IndexFile) {
+class PointCount(indexFile: IndexFile) {
 
   private val thisPartitionID = indexFile.partitionID
   private val root = indexFile.retrieveNode(indexFile.getRootID)
   var partialSum: Any = _
 
-  /** for centralized merge */
+  /** for centralized aggregation */
   def this (points: Iterable[Point], indexFile: IndexFile) = {
     this(indexFile)
     points.foreach(p => CentralizedPointCount(root, p))
   }
 
-  /** for distributed merge with broadcasting all topK lists */
+  /** for distributed aggregation with broadcasting all topK lists */
   def this(points: Array[(String, Point)], indexFile: IndexFile) = {
     this(indexFile)
     partialSum = points.map { case (pointPartitionID, point) =>

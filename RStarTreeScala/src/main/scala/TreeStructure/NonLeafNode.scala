@@ -94,8 +94,6 @@ class NonLeafNode(nodeId: Int) extends TreeNode(nodeId, null) {
       }
       evaluation += (i -> SOverlapArea)
     }}
-    //println("Min overlap enlargement")
-    //evaluation.foreach{case (k,v) => println(s"\tk = $k  v = $v")}
     choose()
   }
 
@@ -118,8 +116,6 @@ class NonLeafNode(nodeId: Int) extends TreeNode(nodeId, null) {
         (expandedR_i.getArea - getRectangle(i).getArea)
       )
     }
-    //println("Min area enlargement")
-    //evaluation.foreach { case (k, v) => println(s"\tk = $k  v = $v") }
     choose()
   }
 
@@ -136,8 +132,6 @@ class NonLeafNode(nodeId: Int) extends TreeNode(nodeId, null) {
     chosenRectangles.foreach { case (i, expandedR_i) =>
       evaluation += (i -> expandedR_i.getArea)
     }
-    //println("Min area")
-    //evaluation.foreach { case (k, v) => println(s"\tk = $k  v = $v") }
     choose()
   }
 
@@ -161,7 +155,6 @@ class NonLeafNode(nodeId: Int) extends TreeNode(nodeId, null) {
         else 0.0
       diffPercentage <= 0.2
     }
-    //println(s"\tchoose results = ${chosenRectangles.toString()}")
     //αν υπάρχει μόνο ένα υποψήφιο ορθωγώνιο
     if(chosenRectangles.size == 1) chosenRectangles.head._1
     // αν υπάρχουν παραπάνω από ένα υποψήφια
