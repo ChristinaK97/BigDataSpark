@@ -53,7 +53,8 @@ class ExecutionStats(
       skyTopKTimes_Sol1 += partitionTimes(2)
     }
 
-    val (aggrSkylineTime, aggrTopKTime, aggrSkyTopKTime_Sol1, totalSkyTopKTime_Sol2) = aggrTimes
+    val (aggrSkylineTime, aggrTopKTime, aggrSkyTopKTime_Sol1, totalSkyTopKTime_Sol2L) = aggrTimes
+    val totalSkyTopKTime_Sol2 = totalSkyTopKTime_Sol2L.toDouble / 1e9
 
     val totalSkylineTime = globalQueryTime(skylineTimes, aggrSkylineTime).toDouble / 1e9
     val totalTopKTime    = globalQueryTime(topKTimes, aggrTopKTime).toDouble / 1e9
