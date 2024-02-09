@@ -98,6 +98,8 @@ class ExecutionStats(
       nDims,
       nPartitions,
       totalTreeCreationTime,
+      totalIOs,
+      totalNOverflow,
       totalSkylineTime,
       aggrSkylineTime,
       kForDataset,
@@ -106,9 +108,7 @@ class ExecutionStats(
       kForSkyline,
       totalSkyTopKTime_Sol1,
       aggrSkyTopKTime,
-      totalSkyTopKTime_Sol2,
-      totalIOs,
-      totalNOverflow
+      totalSkyTopKTime_Sol2
     )
 
     val gson: Gson = new GsonBuilder().setPrettyPrinting().create()

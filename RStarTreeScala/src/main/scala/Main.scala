@@ -58,22 +58,26 @@ object Main {
     val repartitionedRDD = pointsRDD.repartition(nPartitions)
 
     val partitionsResults = repartitionedRDD.mapPartitionsWithIndex { (partitionID, pointsPartition) =>
+
       val rTree = new RStarTree(pointsPartition, nDims)
-      val ((startTree, endTree), (ios, nOverflow)) = rTree.createTree(partitionID.toString)
+      val ((startTree, endTree), (ios, nOverflow))      = rTree.createTree(partitionID.toString)
       val (skyline, topKPartition, topKSkyline, times)  = rTree.runQueries(kForDataset, kForSkyline)
       rTree.close()
+
       Iterator((partitionID.toString, skyline, topKPartition, topKSkyline,
                 (startTree, endTree), times,
                 ios, nOverflow
       ))
+
     }.collect()
 
-
+    // Aggregate partial results
     val aggrTimes = if(nPartitions > 1)
       new AggrPartialResults(sc, distributedAggregation, nDims, partitionsResults, kForDataset, kForSkyline)
           .aggregateResults()
     else (0L, 0L, 0L, 0L)
 
+    // Extract execution stats
     new ExecutionStats(
       partitionsResults,
       aggrTimes,
