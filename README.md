@@ -1,7 +1,7 @@
 ## Scalable Processing of Dominance-based Queries
 
 This repository houses a solution for scalable processing of dominance-based queries in multidimensional data. 
-The project leverages the power of Apache Spark for distributed computing and employs Aggregate R* Trees (aR*Trees) for efficient data indexing. 
+The project leverages the power of Apache Spark and Scala for distributed computing and employs Aggregate R* Trees (aR*Trees) for efficient data indexing. 
 Additionally, a baseline solution is also included to validate our results and benchmark the performance of our proposed methodology.
 
 
