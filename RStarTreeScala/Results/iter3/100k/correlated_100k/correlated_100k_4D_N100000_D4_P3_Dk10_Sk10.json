@@ -1,0 +1,18 @@
+{
+  "distribution": "correlated_100k_4D",
+  "dataSize": 100000,
+  "nDims": 4,
+  "nPartitions": 3,
+  "totalTreeCreationTime": 99.4656277,
+  "totalTreeCreationIOs": 727790,
+  "totalNOverflow": 1559,
+  "totalSkylineTime": 7.7203492,
+  "aggrSkylineTime": 0.0339209,
+  "kForDataset": 10,
+  "totalTopKTime": 8.036344,
+  "aggrTopKTime": 0.341175,
+  "kForSkyline": 10,
+  "totalSkyTopKTime_Sol1": 8.4561791,
+  "aggrSkyTopKTime": 0.2660957,
+  "totalSkyTopKTime_Sol2": 1.5052077
+}
