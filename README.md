@@ -45,7 +45,7 @@ Additionally, a baseline solution is also included to validate our results and b
 
 
 * __Baseline Solutions__<br> In addition to the proposed solution, a baseline approach is implemented for validation and comparative analysis.
-
+    <br>Navigate to [```BaselineSolution/BaselineSolution.scala```](https://github.com/ChristinaK97/BigDataSpark/blob/dev_branch/BaselineSolution/BaselineSolution.scala)
 
 ### System Configuration
 

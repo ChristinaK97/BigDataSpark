@@ -26,12 +26,9 @@ object Main {
 
 
   def main(args: Array[String]): Unit = {
-    val D = 2
-    val distro = "correlated"
-    val dataSize = "50k"
 
     // Declare variables with default values
-    var dataPath = s"file:///C:/Users/karal/progr/Scala/BigDataSpark/dist_generator/$dataSize/$distro/${distro}_${dataSize}_${D}D.csv"
+    var dataPath = s"file:///C:/Users/karal/progr/Scala/BigDataSpark/dist_generator/50k/uniform/uniform_50k_2D.csv"
     var nPartitions = 2
     var kForDataset = 10
     var kForSkyline = 10
