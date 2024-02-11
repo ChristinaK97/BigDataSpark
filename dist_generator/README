@@ -6,36 +6,31 @@ usage: generate_data.py [-h] [--generator {normal,uniform,correlated,anticorrela
                         [--num_dimensions NUM_DIMENSIONS]
 
 Example:
+ ```python generate_data.py --generator normal --mean 200 --num_points 1500 --std_dev 2.5 --output_file generated_data.csv --seed 42 --num_dimensions 5```
 
-    python generate_data.py --generator normal --mean 200 --num_points 1500 --std_dev 2.5 --output_file generated_data.csv --seed 42 --num_dimensions 5
 
-
-For normal distribution data:
-
-    python generate_data.py --generator normal --mean 10 --num_points 5000 --output_file normal_5k_2D.csv --seed 42 --num_dimensions 2
+- For normal distribution data:
+```python generate_data.py --generator normal --mean 10 --num_points 5000 --output_file normal_5k_2D.csv --seed 42 --num_dimensions 2```
 
 similarly for --num_points 50000 and 100000 and --num_dimensions 3, 4 and 5
 
 
-For uniform distribution data:
-
-    python generate_data.py --generator uniform --min_val 0 --max_val 100 --num_points 5000 --output_file uniform_5k_2D.csv --seed 42 --num_dimensions 2
-
-similarly for --num_points 50000 and 100000 and --num_dimensions 3, 4 and 5
-
-
-For Correlation distribution data:
-
-    python generate_data.py --generator correlated --num_points 5000 --output_file correlated_5k_2D.csv --seed 42 --num_dimensions 2
+- For uniform distribution data:
+```python generate_data.py --generator uniform --min_val 0 --max_val 100 --num_points 5000 --output_file uniform_5k_2D.csv --seed 42 --num_dimensions 2```
 
 similarly for --num_points 50000 and 100000 and --num_dimensions 3, 4 and 5
 
 
-For Anti-Correlated distribution data:
+- For Correlation distribution data:
+```python generate_data.py --generator correlated --num_points 5000 --output_file correlated_5k_2D.csv --seed 42 --num_dimensions 2```
 
-    python generate_data.py --generator anticorrelated --rho 0.95 --num_points 5000 --output_file anticorrelated_5k_2D.csv --seed 42 --num_dimensions 2
-    python generate_data.py --generator anticorrelated --rho 0.45 --num_points 5000 --output_file anticorrelated_5k_3D.csv --seed 42 --num_dimensions 3
-    python generate_data.py --generator anticorrelated --rho 0.29 --num_points 5000 --output_file anticorrelated_5k_4D.csv --seed 42 --num_dimensions 4
-    python generate_data.py --generator anticorrelated --rho 0.2 --num_points 5000 --output_file anticorrelated_5k_5D.csv --seed 42 --num_dimensions 5
+similarly for --num_points 50000 and 100000 and --num_dimensions 3, 4 and 5
+
+
+- For Anti-Correlated distribution data:
+```python generate_data.py --generator anticorrelated --rho 0.95 --num_points 5000 --output_file anticorrelated_5k_2D.csv --seed 42 --num_dimensions 2```
+```python generate_data.py --generator anticorrelated --rho 0.45 --num_points 5000 --output_file anticorrelated_5k_3D.csv --seed 42 --num_dimensions 3```
+```python generate_data.py --generator anticorrelated --rho 0.29 --num_points 5000 --output_file anticorrelated_5k_4D.csv --seed 42 --num_dimensions 4```
+```python generate_data.py --generator anticorrelated --rho 0.2 --num_points 5000 --output_file anticorrelated_5k_5D.csv --seed 42 --num_dimensions 5```
 
 similarly for --num_points 50000 and 100000
