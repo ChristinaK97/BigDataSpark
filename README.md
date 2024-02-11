@@ -59,13 +59,9 @@ Additionally, a baseline solution is also included to validate our results and b
 To run the main program, you need to provide the following command line arguments:
 
 - __Data Path (dataPath)__: The path to the input dataset.
-    <br>Example: /path/to/dataset.csv
 - __Number of Partitions / Executors (nPartitions)__:  The desired number of partitions or executors for distributed processing (1 partition per executor).
-    <br>Example: 4
 - __Top-k for Dataset (kForDataset)__: The value of k for the Top-k dominating points in the dataset (Q2).
-    <br>Example: 10
 - __Top-k for Skyline (kForSkyline)__: The value of k for the Top-k dominating points in the skyline (Q3).
-    <br>Example: 5
 
 Usage example:
 > spark-submit rstartreescala_2.13-0.1.0-SNAPSHOT.jar /path/to/dataset.csv 4 10 5
