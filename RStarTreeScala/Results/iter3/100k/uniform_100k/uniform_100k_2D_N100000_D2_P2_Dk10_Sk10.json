@@ -1,0 +1,18 @@
+{
+  "distribution": "uniform_100k_2D",
+  "dataSize": 100000,
+  "nDims": 2,
+  "nPartitions": 2,
+  "totalTreeCreationTime": 94.6432337,
+  "totalTreeCreationIOs": 590655,
+  "totalNOverflow": 769,
+  "totalSkylineTime": 14.6596681,
+  "aggrSkylineTime": 0.0255249,
+  "kForDataset": 10,
+  "totalTopKTime": 15.505667,
+  "aggrTopKTime": 0.2325518,
+  "kForSkyline": 10,
+  "totalSkyTopKTime_Sol1": 15.2438126,
+  "aggrSkyTopKTime": 0.0893687,
+  "totalSkyTopKTime_Sol2": 0.1475976
+}

@@ -1,0 +1,18 @@
+{
+  "distribution": "anticorrelated_50k_2D",
+  "dataSize": 50000,
+  "nDims": 2,
+  "nPartitions": 3,
+  "totalTreeCreationTime": 13.1137915,
+  "totalTreeCreationIOs": 254094,
+  "totalNOverflow": 463,
+  "totalSkylineTime": 2.0442682,
+  "aggrSkylineTime": 0.0171369,
+  "kForDataset": 10,
+  "totalTopKTime": 2.8694383,
+  "aggrTopKTime": 0.235169,
+  "kForSkyline": 10,
+  "totalSkyTopKTime_Sol1": 3.0433266,
+  "aggrSkyTopKTime": 0.0678004,
+  "totalSkyTopKTime_Sol2": 0.2003724
+}

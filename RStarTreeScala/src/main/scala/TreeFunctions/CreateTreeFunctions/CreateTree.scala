@@ -58,6 +58,7 @@ class CreateTree(indexfile: IndexFile, logger : Logger) {
 	*/ private var Split: Boolean = false
 
   private var counter: Int = 0
+  var nOverflow: Int = 0
 
 
 /* ----------------------------------- INSERT ----------------------------------------------------------------------- */
@@ -73,7 +74,7 @@ class CreateTree(indexfile: IndexFile, logger : Logger) {
     })
     indexFile.writeNodeToFile(root)
     indexfile.updateMetadata(root.getNodeID, treeHeight, nextNodeID-1)
-    indexFile.setNumOfPoints(counter)                                                                                   ; if(DEBUG) logger.info(s"# IOs = ${indexFile.getIOs}\t tree height = $treeHeight\t # nodes = ${nextNodeID - 1}\t # points = ${indexFile.getNumOfPoints} \t root node id [${root.getNodeID}] with childPtrs = ${if(!root.isLeaf) root.map(entry=> entry.asInstanceOf[Rectangle].getChildID) else root.isLeaf}")
+    indexFile.setNumOfPoints(counter)                                                                                   ; logger.info(s"# IOs = ${indexFile.getIOs}\t # overflowed = $nOverflow\t tree height = $treeHeight\t # nodes = ${nextNodeID - 1}\t # points = ${indexFile.getNumOfPoints} \t root node id [${root.getNodeID}] with childPtrs = ${if(!root.isLeaf) root.map(entry=> entry.asInstanceOf[Rectangle].getChildID) else root.isLeaf}")
   }
 
 
@@ -226,7 +227,7 @@ class CreateTree(indexfile: IndexFile, logger : Logger) {
    *              (root level == 1 , leaf level == treeHeight)
    */
   private def overflowTreatment(node: TreeNode, level: Int): Unit = {
-
+    nOverflow += 1
     Split = node.getNodeID == root.getNodeID || reinsertOnLevel(level)                                                  ; if(DEBUG) logger.info(s"\nOverflow treatment for node [${node.getNodeID}] at level = $level. isLeaf ${node.isLeaf}\t\t ${node.serialize}")
     ReInsert = !Split
     if(Split)

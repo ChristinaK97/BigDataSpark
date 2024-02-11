@@ -37,7 +37,7 @@ object SimpleSkylineCalculation {
     val sc = spark.sparkContext
     import spark.implicits._
 
-    val filePath = "/home/tektma/projects/BigDataSpark/dist_generator/normal_small.csv"  // Replace with the actual file path.
+    val filePath = "/home/marios/projects/Big_Data_Skyline_Project/BigDataSpark/dist_generator/correlated_medium.csv"  // Replace with the actual file path.
 
 
     println("=================Skyline Calculation=================")
@@ -62,7 +62,6 @@ object SimpleSkylineCalculation {
 
     val end_skyline = System.nanoTime()
     val duration_skyline = (end_skyline - start_skyline) / 1e9d
-    println(s"------------------------------------>Execution time for Skyline Calculation: $duration_skyline sec")
 
     // Collect and print the Skyline
     skyline.collect().foreach(point => println(point.dimensions.mkString(",")))
@@ -81,19 +80,21 @@ object SimpleSkylineCalculation {
     val k = if (args.length > 0) args(0).toInt else 10 // For example, default is 10
 
     // Local sorting within each partition
-    val localSortedDom = dominanceScoresRDD.coalesce(numPartitions).mapPartitions(iter => Iterator(iter.toList.sortBy(_._2)))
+    // Perform a local sort within each partition and then take the top k elements from each partition
+    val localTopK = dominanceScoresRDD
+      .coalesce(numPartitions)
+      .mapPartitions(iter => iter.toList.sortBy(_._2).reverse.take(k).iterator)
 
-    // Merge smaller sorted partitions
-    val mergedSortedDom = localSortedDom.coalesce(1)
+    // Merge all top-k elements from each partition into a single partition
+    val globalTopK = localTopK.collect()
 
     // Get top k points with the highest dominance scores
-    val topKPoints: Array[(Point, Int)] = mergedSortedDom
-      .flatMap(identity)
+    val topKPoints: Array[(Point, Int)] = globalTopK
+      .sortBy(_._2)
       .take(k)
 
     val end_topk = System.nanoTime()
     val duration_topk = (end_topk - start_topk) / 1e9d
-    println(s"------------------------------------>Execution time for Top-K Calculation: $duration_topk sec")
 
 
     // Print the top k points with their dominance scores
@@ -106,7 +107,7 @@ object SimpleSkylineCalculation {
     val start_stopk = System.nanoTime()
 
     // Compute dominance scores only for the skyline points
-    val skylineDominanceScoresRDD: RDD[(Point, Int)] = skyline.map { skypoint =>
+    val skylineDominanceScoresRDD: RDD[(Point, Int)] = skyline.coalesce(numPartitions).map { skypoint =>
       val score = pointsList.value.count(otherPoint => dominates(skypoint, otherPoint))
       (skypoint, score)
     }
@@ -114,19 +115,31 @@ object SimpleSkylineCalculation {
     // Get the value of k from args or use a default value
     val sk_k = if (args.length > 1) args(1).toInt else 10 // For example, default is 10
 
+    // Local sorting within each partition
+    // Perform a local sort within each partition and then take the top k elements from each partition
+    val localSkylineTopK = skylineDominanceScoresRDD
+      .coalesce(numPartitions)
+      .mapPartitions(iter => iter.toList.sortBy(_._2).reverse.take(k).iterator)
+
+    // Merge all top-k elements from each partition into a single partition
+    val globalSkylineTopK = localSkylineTopK.collect()
+
     // Get top k skyline points with the highest dominance scores
-    val topKSkylinePoints: Array[(Point, Int)] = skylineDominanceScoresRDD
-      .sortBy(_._2, ascending = false)
+    val topKSkylinePoints: Array[(Point, Int)] = globalSkylineTopK
+      .sortBy(_._2)
       .take(sk_k)
 
     val end_stopk = System.nanoTime()
     val duration_stopk = (end_stopk - start_stopk) / 1e9d
-    println(s"------------------------------------>Execution time for Skyline Top-K Calculation: $duration_stopk sec")
 
     // Print the top k skyline points with their dominance scores
     topKSkylinePoints.foreach { case (point, score) =>
       println(s"Skyline Point: ${point.dimensions.mkString(",")}, Score: $score")
     }
+
+    println(s"------------------------------------>Execution time for Skyline Calculation: $duration_skyline sec")
+    println(s"------------------------------------>Execution time for Top-K Calculation: $duration_topk sec")
+    println(s"------------------------------------>Execution time for Skyline Top-K Calculation: $duration_stopk sec")
 
     // Stop the Spark session
     spark.stop()

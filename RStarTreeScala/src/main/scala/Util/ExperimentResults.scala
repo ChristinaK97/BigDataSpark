@@ -6,12 +6,15 @@ case class ExperimentResults(
                                 nDims: Int,
                                 nPartitions: Int,
                                 totalTreeCreationTime: Double,
+                                totalTreeCreationIOs: Int,
+                                totalNOverflow: Int,
                                 totalSkylineTime: Double,
-                                mergeSkylineTime: Double,
+                                aggrSkylineTime: Double,
                                 kForDataset: Int,
                                 totalTopKTime: Double,
-                                mergeTopKTime: Double,
+                                aggrTopKTime: Double,
                                 kForSkyline: Int,
-                                totalSkyTopKTime: Double,
-                                mergeSkyTopKTime: Double
+                                totalSkyTopKTime_Sol1: Double,
+                                aggrSkyTopKTime: Double,
+                                totalSkyTopKTime_Sol2: Double
 )

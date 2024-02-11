@@ -29,6 +29,7 @@ abstract class GeometricObject extends Serializable {
 
   def getDomScore: Int = domScore
   def increaseDomScore(value: Int): Unit = domScore += value
+  def setDomScore(value: Int): Unit = domScore = value
   // ------------------------------------------------------------------
 
 

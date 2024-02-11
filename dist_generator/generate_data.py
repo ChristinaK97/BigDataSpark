@@ -53,7 +53,13 @@ def generate_correlated_data_points(rho, num_points, num_dimensions, seed):
     np.random.seed(seed)
     mean = np.zeros(num_dimensions)
     cov_matrix = np.eye(num_dimensions) + rho * (np.ones((num_dimensions, num_dimensions)) - np.eye(num_dimensions))
-    return np.random.multivariate_normal(mean, cov_matrix, size=num_points)
+    correlated_data = np.random.multivariate_normal(mean, cov_matrix, size=num_points)
+    
+    # Ensure all elements are non-negative by shifting
+    min_value = np.min(correlated_data)
+    shifted_data = correlated_data - min_value
+    
+    return shifted_data
 
 def generate_anticorrelated_data_points(rho, num_points, num_dimensions, seed):
     """
@@ -87,7 +93,14 @@ def generate_anticorrelated_data_points(rho, num_points, num_dimensions, seed):
     if np.any(eigenvalues <= 0):
         raise ValueError("The generated covariance matrix is not positive semi-definite.")
 
-    return np.random.multivariate_normal(mean, anticorr_matrix, size=num_points)
+    anticorrelated_data = np.random.multivariate_normal(mean, anticorr_matrix, size=num_points)
+    
+    # Ensure all elements are non-negative by shifting
+    min_value = np.min(anticorrelated_data)
+    shifted_data = anticorrelated_data - min_value
+    
+    return shifted_data
+    
 
 def write_to_csv(data_points, output_file):
     """

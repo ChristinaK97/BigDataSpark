@@ -216,9 +216,9 @@ class NodeSplit(nextId: Int) {
     val node2 = new NonLeafNode(nextID, sorts(chosenDiamerisi).drop(splitIndex))          //Δεύτερος νέος κόμβος
     node2.calculateSCount()
     (
-      MBRs(2 * chosenDiamerisi)(0),
+      MBRs(chosenDiamerisi)(0),
       node1,
-      MBRs(2 * chosenDiamerisi + 1)(1),
+      MBRs(chosenDiamerisi)(1),
       node2
     )
   }
