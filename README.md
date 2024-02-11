@@ -6,11 +6,11 @@ Additionally, a baseline solution is also included to validate our results and b
 
 
 ### Types of Dominance-based Queries
-* __Q1 Skyline Computation__: Given a set of d-dimensional points, return the set of points that are not dominated. This is also
+* __[Q1] Skyline Computation__: Given a set of d-dimensional points, return the set of points that are not dominated. This is also
   known as the skyline set.
-* __Q2 Top-k Dominating Points__: Given a set of d-dimensional points, return the k points with the highest dominance score. The
+* __[Q2] Top-k Dominating Points__: Given a set of d-dimensional points, return the k points with the highest dominance score. The
   dominance score of a point p is defined as the total number of points dominated by p.
-* __Q3 Top-k Skyline Dominating Points__: Given a set of d-dimensional points, return the k points from the skyline with the highest dominance
+* __[Q3] Top-k Skyline Dominating Points__: Given a set of d-dimensional points, return the k points from the skyline with the highest dominance
   score.
 
 
