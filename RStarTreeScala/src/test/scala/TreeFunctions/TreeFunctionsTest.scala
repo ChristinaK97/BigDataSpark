@@ -6,7 +6,7 @@ import java.io.{BufferedReader, FileReader}
 
 object TreeFunctionsTest {
 
-  def readPointsFromCSV(csvFilePath: String): Iterable[Point] = {
+  /*def readPointsFromCSV(csvFilePath: String): Iterable[Point] = {
     val points = scala.collection.mutable.ListBuffer[Point]()
 
     val fileReader = new FileReader(csvFilePath)
@@ -47,5 +47,5 @@ object TreeFunctionsTest {
       println((end-start).toDouble / 1e9)
     }
     rTree.close()
-  }
+  }*/
 }
